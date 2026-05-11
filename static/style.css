@@ -60,7 +60,7 @@ body {
     font-family: var(--font-mono);
     font-size: 0.55rem;
     letter-spacing: 0.25em;
-    color: var(--sage);
+    color: #a8b89a
     margin-bottom: 0.2rem;
 }
 
@@ -91,7 +91,7 @@ body {
     font-family: var(--font-mono);
     font-size: 0.5rem;
     letter-spacing: 0.25em;
-    color: rgba(200,191,174,0.35);
+    color: rgba(200,191,174,0.7);
 }
 
 .sb-item {
@@ -110,14 +110,14 @@ body {
     font-family: var(--font-mono);
     font-size: 0.55rem;
     letter-spacing: 0.1em;
-    color: var(--sage);
+    color: #c8bfae;
     margin-bottom: 0.15rem;
 }
 
 .sb-item-date {
     font-family: var(--font-mono);
     font-size: 0.5rem;
-    color: rgba(200,191,174,0.3);
+    color: rgba(200,191,174,0.6);
 }
 
 .sb-footer {
@@ -130,11 +130,11 @@ body {
     font-family: var(--font-mono);
     font-size: 0.5rem;
     letter-spacing: 0.1em;
-    color: rgba(200,191,174,0.25);
+    color: rgba(200,191,174,0.55);
 }
 
 .sb-link {
-    color: rgba(200,191,174,0.4);
+    color: rgba(200,191,174,0.7);
     text-decoration: none;
     transition: color 0.2s;
 }

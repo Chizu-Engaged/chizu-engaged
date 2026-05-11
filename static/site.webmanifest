@@ -1,0 +1,12 @@
+{
+  "name": "Chizu Engaged",
+  "short_name": "Chizu",
+  "description": "Engaged Buddhism & Simple Economics",
+  "icons": [
+    { "src": "/static/favicon/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/favicon/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#2c3a26",
+  "background_color": "#f5f0e8",
+  "display": "standalone"
+}

@@ -138,10 +138,19 @@ HTML_PAGE = f"""
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chizu Engaged · Engaged Buddhism & Simple Economics</title>
-    <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
+
     <link rel="stylesheet" href="/static/style.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+    <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">
+    <link rel="manifest" href="/static/site.webmanifest">
+    <meta name="theme-color" content="#2c3a26">
+
+
 </head>
 <body>
 <div class="layout">
@@ -231,16 +240,6 @@ HTML_PAGE = f"""
                     placeholder="Ask the teachings..."
                     autocomplete="off" spellcheck="false" maxlength="400"
                     onkeypress="if(event.key==='Enter') fazerPergunta()">
-                <button id="btn-mic" title="Speak">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                        <line x1="12" y1="19" x2="12" y2="23"/>
-                        <line x1="8" y1="23" x2="16" y2="23"/>
-                    </svg>
-                </button>
                 <button id="btn-enviar" onclick="fazerPergunta()">→</button>
             </div>
         </div>
@@ -252,7 +251,7 @@ HTML_PAGE = f"""
     window.FAREWELL_JS = {json.dumps(FAREWELL_JS)};
     window.WAITING_JS  = {json.dumps(WAITING_JS)};
 </script>
-<script src="/static/script.js?v=1"></script>
+<script src="/static/script.js?v=4"></script>
 </body>
 </html>
 """
