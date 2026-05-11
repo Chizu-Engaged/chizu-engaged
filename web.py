@@ -1,0 +1,359 @@
+import sys
+import os
+import random
+import json
+import re
+import time
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
+from dotenv import load_dotenv
+from collections import defaultdict
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+load_dotenv(os.path.join(BASE_DIR, ".env"), override=True)
+
+try:
+    from core.ai_provider import FreeAIProvider
+    from core.engine import (
+        carregar_biblioteca, buscar_contexto, montar_prompt,
+        AUTORES_DISPONIVEIS, TEMAS_DISPONIVEIS
+    )
+except ImportError as e:
+    print(f"❌ Import error: {e}")
+    sys.exit(1)
+
+
+# ============================================
+# Inicialização
+# ============================================
+app = FastAPI()
+ai_provider        = FreeAIProvider()
+biblioteca_engaged = carregar_biblioteca()
+conversation_memory = {}
+
+MARCADORES_BLOQUEIO = ["BLOQUEADO", "EMPTY", "VAZIO"]
+
+RATE_LIMIT = 10
+JANELA_SEG = 60
+_contadores: dict = defaultdict(list)
+
+def checar_rate_limit(ip: str) -> bool:
+    agora = time.time()
+    _contadores[ip] = [t for t in _contadores[ip] if agora - t < JANELA_SEG]
+    if len(_contadores[ip]) >= RATE_LIMIT:
+        return False
+    _contadores[ip].append(agora)
+    return True
+
+PADROES_INJECTION = [
+    r"###\s*\w+",
+    r"system\s*prompt",
+    r"ignore\s+(previous|all|above)",
+    r"act as",
+    r"jailbreak",
+    r"forget\s+(everything|the rules)",
+    r"from now on",
+    r"pretend\s+that",
+    r"no\s+(restrictions|limits|rules)",
+    r"repeat\s+(the rules|the instructions)",
+]
+
+def sanitizar_pergunta(texto: str) -> str | None:
+    texto = texto.strip()
+    if len(texto) > 400:
+        return None
+    for padrao in PADROES_INJECTION:
+        if re.search(padrao, texto, re.IGNORECASE):
+            return None
+    return texto
+
+FRASES_BLOQUEIO = [
+    "This question rests in silence.",
+    "The teacher holds this in stillness.",
+    "Some doors open only from the inside.",
+    "Silence is also an answer.",
+]
+
+def resposta_bloqueio() -> str:
+    return random.choice(FRASES_BLOQUEIO)
+
+def is_bloqueado(texto: str) -> bool:
+    t = texto.upper()
+    return any(m.upper() in t for m in MARCADORES_BLOQUEIO)
+
+def limpar_resposta(texto: str) -> str:
+    return texto.replace("(Silence)", "").replace("(pause)", "").lstrip("#").strip()
+
+def is_local(request: Request) -> bool:
+    host = request.headers.get("host", "")
+    return host.startswith("localhost") or host.startswith("127.0.0.1")
+
+
+# ============================================
+# Arquivos Estáticos
+# ============================================
+if os.path.exists(os.path.join(BASE_DIR, "static")):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
+if os.path.exists(os.path.join(BASE_DIR, "legal")):
+    app.mount("/legal", StaticFiles(directory="legal", html=True), name="legal")
+
+
+# ============================================
+# Textos da Interface
+# ============================================
+FAREWELL_JS = [
+    "May all beings benefit.",
+    "Go in peace.",
+    "The path opens before you.",
+    "Gassho.",
+]
+
+WAITING_JS = [
+    "Listening to the teachings...",
+    "Drawing from the sources...",
+    "The voices gather...",
+    "Bearing witness...",
+    "Consulting the acervo...",
+    "The wisdom surfaces...",
+    "Weaving the threads...",
+    "The silence speaks...",
+    "The teachers respond...",
+    "The context unfolds...",
+]
+
+AUTORES_OPTIONS = "".join(
+    f'<option value="{autor}">{autor}</option>'
+    for autor in sorted(AUTORES_DISPONIVEIS)
+)
+
+HTML_PAGE = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chizu Engaged · Engaged Buddhism & Simple Economics</title>
+    <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
+    <link rel="stylesheet" href="/static/style.css?v=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sb-header">
+            <div class="sb-logo">CHIZU ENGAGED</div>
+            <div class="sb-title">Conversations</div>
+        </div>
+        <button class="sb-new" onclick="novaConversa()">+ New conversation</button>
+        <div class="sb-section">HISTORY</div>
+        <div id="historico-lista"></div>
+        <div class="sb-footer">
+            <a href="https://chizu.ia.br" class="sb-link">← Chizu</a>
+            <span>engaged.chizu.ia.br</span>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- TELA DE TEMAS -->
+        <div id="tela-temas" class="tela-temas">
+            <div class="hero">
+                <p class="kicker">ZEN ENGAJADO · IN ENGLISH</p>
+                <h1 class="hero-title">Engaged Buddhism<br>&amp; <em>Simple Economics</em></h1>
+                <p class="hero-sub">Choose a theme — the system selects the voices that speak to it most deeply.</p>
+            </div>
+
+            <p class="section-label">CHOOSE A THEME TO BEGIN</p>
+
+            <div class="temas-grid">
+                <div class="tema-card selected" data-tema="Gift Economy" onclick="selecionarTema(this)">
+                    <p class="tc-name">Gift Economy</p>
+                    <p class="tc-desc">Money, generosity and sacred exchange as spiritual practice.</p>
+                    <p class="tc-authors">EISENSTEIN · SCHUMACHER · GLASSMAN</p>
+                </div>
+                <div class="tema-card" data-tema="Social Action" onclick="selecionarTema(this)">
+                    <p class="tc-name">Social Action</p>
+                    <p class="tc-desc">Buddhism practiced beyond the cushion — in streets and councils.</p>
+                    <p class="tc-authors">SIVARAKSA · THICH NHAT HANH · MACY</p>
+                </div>
+                <div class="tema-card" data-tema="Simple Living" onclick="selecionarTema(this)">
+                    <p class="tc-name">Simple Living</p>
+                    <p class="tc-desc">Voluntary simplicity as resistance and liberation.</p>
+                    <p class="tc-authors">SCHUMACHER · SATISH KUMAR · VICKI ROBIN</p>
+                </div>
+                <div class="tema-card" data-tema="Local Futures" onclick="selecionarTema(this)">
+                    <p class="tc-name">Local Futures</p>
+                    <p class="tc-desc">Rebuilding community, food systems and place-based economies.</p>
+                    <p class="tc-authors">NORBERG-HODGE · KUMAR · EISENSTEIN</p>
+                </div>
+            </div>
+
+            <div class="start-bar">
+                <span id="start-hint" class="start-hint">Gift Economy selected</span>
+                <button class="start-btn" onclick="iniciarConversa()">Begin conversation →</button>
+            </div>
+        </div>
+
+        <!-- TELA DE CHAT -->
+        <div id="tela-chat" class="tela-chat" style="display:none;">
+            <div class="chat-header">
+                <div class="ch-left">
+                    <span class="ch-theme" id="chat-tema-label">GIFT ECONOMY</span>
+                    <span class="ch-voices" id="chat-vozes-label">Eisenstein · Schumacher · Glassman</span>
+                </div>
+                <div class="ch-right">
+                    <select id="autor-select" title="Filter by author">
+                        <option value="">All voices</option>
+                        {AUTORES_OPTIONS}
+                    </select>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <div class="msg bot">
+                    <div class="msg-bubble">
+                        <p>Ask anything about engaged Buddhism, gift economy, simple living or social action.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="pergunta"
+                    placeholder="Ask the teachings..."
+                    autocomplete="off" spellcheck="false" maxlength="400"
+                    onkeypress="if(event.key==='Enter') fazerPergunta()">
+                <button id="btn-mic" title="Speak">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </button>
+                <button id="btn-enviar" onclick="fazerPergunta()">→</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    window.FAREWELL_JS = {json.dumps(FAREWELL_JS)};
+    window.WAITING_JS  = {json.dumps(WAITING_JS)};
+</script>
+<script src="/static/script.js?v=1"></script>
+</body>
+</html>
+"""
+
+
+# ============================================
+# Rotas
+# ============================================
+@app.get("/", response_class=HTMLResponse)
+async def get_index():
+    return HTML_PAGE
+
+
+@app.head("/")
+async def head_index():
+    return Response(status_code=200)
+
+
+@app.post("/ask")
+async def ask(request: Request):
+    DEBUG = is_local(request)
+    ip    = request.client.host
+
+    if not checar_rate_limit(ip):
+        return JSONResponse(
+            {"resposta": "Too many requests. Please wait a moment."},
+            status_code=429
+        )
+
+    try:
+        data         = await request.json()
+        pergunta_raw = data.get("pergunta", "").strip()
+        pergunta     = sanitizar_pergunta(pergunta_raw)
+
+        if not pergunta:
+            return JSONResponse({"resposta": resposta_bloqueio()})
+
+        if pergunta.lower() in ["exit", "bye", "gassho", "thanks", "quit", "ok"]:
+            return JSONResponse({"resposta": random.choice(FAREWELL_JS)})
+
+        autor_raw    = data.get("autor", None)
+        autor_filtro = autor_raw if autor_raw in AUTORES_DISPONIVEIS else None
+
+        tema_raw    = data.get("tema", None)
+        tema_filtro = tema_raw if tema_raw in TEMAS_DISPONIVEIS else None
+
+        session_id        = data.get("session_id", ip)
+        historico_usuario = conversation_memory.get(session_id, [])
+
+        provider_nome, provider_cfg = ai_provider.sortear_provider()
+        top_k = provider_cfg.get("top_k", 4)
+
+        contexto = buscar_contexto(
+            pergunta, biblioteca_engaged,
+            top_k=top_k,
+            autor_filtro=autor_filtro,
+            tema_filtro=tema_filtro
+        )
+        mensagens_base, perfil_nome = montar_prompt(
+            pergunta, contexto,
+            autor_filtro=autor_filtro,
+            tema_filtro=tema_filtro
+        )
+
+        if historico_usuario:
+            msgs_hist = []
+            for troca in historico_usuario[-3:]:
+                msgs_hist.append({"role": "user",      "content": troca["pergunta"]})
+                msgs_hist.append({"role": "assistant", "content": troca["resposta"]})
+            prompt_completo = [mensagens_base[0]] + msgs_hist + [mensagens_base[-1]]
+        else:
+            prompt_completo = [mensagens_base[0], mensagens_base[-1]]
+
+        resposta_raw, ia_nome  = ai_provider.chat(prompt_completo, provider_nome=provider_nome)
+        resposta_limpa         = limpar_resposta(resposta_raw)
+
+        if DEBUG:
+            print("-" * 50)
+            print("      IA:", ia_nome)
+            print("   THEME:", perfil_nome)
+            print("QUESTION:", pergunta)
+            print(" CONTEXT:", contexto[:80])
+
+        if is_bloqueado(resposta_limpa):
+            return JSONResponse({"resposta": resposta_bloqueio()})
+
+        # Memória de sessão
+        if session_id not in conversation_memory:
+            conversation_memory[session_id] = []
+        conversation_memory[session_id].append({
+            "pergunta": pergunta[:150],
+            "resposta": resposta_limpa[:200]
+        })
+        if len(conversation_memory[session_id]) > 10:
+            conversation_memory[session_id] = conversation_memory[session_id][-10:]
+        if len(conversation_memory) > 1000:
+            conversation_memory.clear()
+
+        resposta_exibida = f"{resposta_limpa}\n\n— via {perfil_nome} · {ia_nome}"
+        return JSONResponse({"resposta": resposta_exibida})
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return JSONResponse({"resposta": resposta_bloqueio()}, status_code=500)

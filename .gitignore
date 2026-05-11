@@ -1,0 +1,17 @@
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+
+### Ambientes Virtuais ###
+venv/
+.env
+
+### IDEs e Sistema ###
+.vscode/
+.DS_Store
+
+### Dados Sensíveis/Grandes ###
+data/embeddings*.json
+### MkDocs ###
+site/
