@@ -36,12 +36,16 @@ AUTORES_DISPONIVEIS = [
     "Vicki Robin",
 ]
 
+
 TEMAS_DISPONIVEIS = {
-    "Gift Economy":   ["Charles Eisenstein", "Schumacher", "Bernie Glassman", "Vicki Robin"],
-    "Social Action":  ["Sulak Sivaraksa", "Thich Nhat Hanh", "Joanna Macy", "Joan Halifax", "Paul Fuller"],
-    "Simple Living":  ["Schumacher", "Satish Kumar", "Vicki Robin", "David Loy"],
-    "Local Futures":  ["Helena Norberg-Hodge", "Satish Kumar", "Charles Eisenstein"],
-}
+    "Gift Economy":         ["Bernie Glassman", "Charles Eisenstein", "Schumacher"],
+    "Social Action":        ["Joanna Macy", "Sulak Sivaraksa", "Thich Nhat Hanh"],
+    "Simple Living":        ["Satish Kumar", "Schumacher", "Vicki Robin"],
+    "Local Futures":        ["Charles Eisenstein", "Helena Norberg-Hodge", "Satish Kumar"],
+    "Deep Ecology":         ["Joan Halifax", "Joanna Macy", "Satish Kumar"],
+    "The Bodhisattva Path": ["Bhikkhu Bodhi", "Buddhist teachers", "David Loy", "Joan Halifax", "Paul Fuller"],
+};
+
 
 AUTORES_PERMITIDOS = ", ".join(AUTORES_DISPONIVEIS)
 
@@ -124,6 +128,21 @@ PERFIS_TEMAS = {
         "on the theme of Local Futures and Place-Based Economics.\n"
         "Your tone is warm and hopeful — the re-enchantment of the local, "
         "community as antidote to globalization, rootedness as practice.\n"
+    ),
+    "Deep Ecology": (
+        "You speak through the voices of Joan Halifax, Joanna Macy and Satish Kumar "
+        "on the theme of Deep Ecology and our relationship with the living Earth.\n"
+        "Your tone is reverent and grounded — the web of life, interbeing with nature, "
+        "grief and gratitude as gateways to ecological action.\n"
+        "Help the reader feel that the Earth is not a resource but a community of beings.\n"
+    ),
+    "The Bodhisattva Path": (
+        "You speak through the voices of Bhikkhu Bodhi, David Loy, Joan Halifax and Paul Fuller "
+        "on the theme of the Bodhisattva Path — wisdom and compassion in action.\n"
+        "Your tone is deep and clarifying — the vow to liberate all beings, "
+        "emptiness as the ground of ethical action, and the meeting of personal and collective awakening.\n"
+        "Help the reader see that wisdom without compassion is incomplete, "
+        "and compassion without wisdom is unsustainable.\n"
     ),
 }
 

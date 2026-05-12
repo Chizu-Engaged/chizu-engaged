@@ -31,8 +31,8 @@ except ImportError as e:
 # Inicialização
 # ============================================
 app = FastAPI()
-ai_provider        = FreeAIProvider()
-biblioteca_engaged = carregar_biblioteca()
+ai_provider         = FreeAIProvider()
+biblioteca_engaged  = carregar_biblioteca()
 conversation_memory = {}
 
 MARCADORES_BLOQUEIO = ["BLOQUEADO", "EMPTY", "VAZIO"]
@@ -41,6 +41,7 @@ RATE_LIMIT = 10
 JANELA_SEG = 60
 _contadores: dict = defaultdict(list)
 
+
 def checar_rate_limit(ip: str) -> bool:
     agora = time.time()
     _contadores[ip] = [t for t in _contadores[ip] if agora - t < JANELA_SEG]
@@ -48,6 +49,7 @@ def checar_rate_limit(ip: str) -> bool:
         return False
     _contadores[ip].append(agora)
     return True
+
 
 PADROES_INJECTION = [
     r"###\s*\w+",
@@ -62,6 +64,7 @@ PADROES_INJECTION = [
     r"repeat\s+(the rules|the instructions)",
 ]
 
+
 def sanitizar_pergunta(texto: str) -> str | None:
     texto = texto.strip()
     if len(texto) > 400:
@@ -71,6 +74,7 @@ def sanitizar_pergunta(texto: str) -> str | None:
             return None
     return texto
 
+
 FRASES_BLOQUEIO = [
     "This question rests in silence.",
     "The teacher holds this in stillness.",
@@ -78,15 +82,19 @@ FRASES_BLOQUEIO = [
     "Silence is also an answer.",
 ]
 
+
 def resposta_bloqueio() -> str:
     return random.choice(FRASES_BLOQUEIO)
+
 
 def is_bloqueado(texto: str) -> bool:
     t = texto.upper()
     return any(m.upper() in t for m in MARCADORES_BLOQUEIO)
 
+
 def limpar_resposta(texto: str) -> str:
     return texto.replace("(Silence)", "").replace("(pause)", "").lstrip("#").strip()
+
 
 def is_local(request: Request) -> bool:
     host = request.headers.get("host", "")
@@ -126,26 +134,22 @@ WAITING_JS = [
     "The context unfolds...",
 ]
 
-HTML_PAGE = f"""
-<!DOCTYPE html>
+
+# ============================================
+# HTML
+# ============================================
+HTML_PAGE = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chizu Engaged · Engaged Buddhism & Simple Economics</title>
-
-    <link rel="stylesheet" href="/static/style.css?v=1">
+    <link rel="stylesheet" href="/static/style.css?v=5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-
     <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">
-    <link rel="manifest" href="/static/site.webmanifest">
     <meta name="theme-color" content="#2c3a26">
-
-
 </head>
 <body>
 <div class="layout">
@@ -203,12 +207,12 @@ HTML_PAGE = f"""
                     <p class="tc-name">Deep Ecology</p>
                     <p class="tc-desc">Earth as teacher — soil, soul and the sacred.</p>
                     <p class="tc-authors">Joan Halifax · Joanna Macy · Satish Kumar</p>
-                </div>                
+                </div>
                 <div class="tema-card" data-tema="The Bodhisattva Path" onclick="selecionarTema(this)">
                     <p class="tc-name">The Bodhisattva Path</p>
-                    <p class="tc-desc">Compassion in action — serving all beings without burning out.</p>
-                    <p class="tc-authors">Bhikkhu Bodhi · Buddhist teachers · David Loy · Joan Halifax · Paul Fuller</p>
-                </div>                
+                    <p class="tc-desc">Compassion in action — the vow to liberate all beings.</p>
+                    <p class="tc-authors">Bhikkhu Bodhi · Buddhist teachers · David Loy · Paul Fuller</p>
+                </div>
             </div>
 
             <div class="start-bar">
@@ -222,7 +226,7 @@ HTML_PAGE = f"""
             <div class="chat-header">
                 <div class="ch-left">
                     <span class="ch-theme" id="chat-tema-label">GIFT ECONOMY</span>
-                    <span class="ch-voices" id="chat-vozes-label">Eisenstein · Schumacher · Glassman</span>
+                    <span class="ch-voices" id="chat-vozes-label">Bernie Glassman · Charles Eisenstein · Schumacher</span>
                 </div>
                 <div class="ch-right">
                     <select id="autor-select" title="Filter by author">
@@ -242,8 +246,7 @@ HTML_PAGE = f"""
             <div class="chat-input-area">
                 <input type="text" id="pergunta"
                     placeholder="Ask the teachings..."
-                    autocomplete="off" spellcheck="false" maxlength="400"
-                    onkeypress="if(event.key==='Enter') fazerPergunta()">
+                    autocomplete="off" spellcheck="false" maxlength="400">
                 <button id="btn-enviar" onclick="fazerPergunta()">→</button>
             </div>
         </div>
@@ -255,7 +258,7 @@ HTML_PAGE = f"""
     window.FAREWELL_JS = {json.dumps(FAREWELL_JS)};
     window.WAITING_JS  = {json.dumps(WAITING_JS)};
 </script>
-<script src="/static/script.js?v=4"></script>
+<script src="/static/script.js?v=5"></script>
 </body>
 </html>
 """
@@ -329,15 +332,15 @@ async def ask(request: Request):
         else:
             prompt_completo = [mensagens_base[0], mensagens_base[-1]]
 
-        resposta_raw, ia_nome  = ai_provider.chat(prompt_completo, provider_nome=provider_nome)
-        resposta_limpa         = limpar_resposta(resposta_raw)
+        resposta_raw, ia_nome = ai_provider.chat(prompt_completo, provider_nome=provider_nome)
+        resposta_limpa        = limpar_resposta(resposta_raw)
 
         if DEBUG:
             print("-" * 50)
             print("      IA:", ia_nome)
             print("   THEME:", perfil_nome)
             print("QUESTION:", pergunta)
-            print(" CONTEXT:", contexto[:80])
+            print(" CONTEXT:", contexto[:120])
 
         if is_bloqueado(resposta_limpa):
             return JSONResponse({"resposta": resposta_bloqueio()})
