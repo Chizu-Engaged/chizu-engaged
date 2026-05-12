@@ -182,32 +182,32 @@ HTML_PAGE = f"""
                 <div class="tema-card selected" data-tema="Gift Economy" onclick="selecionarTema(this)">
                     <p class="tc-name">Gift Economy</p>
                     <p class="tc-desc">Money, generosity and sacred exchange as spiritual practice.</p>
-                    <p class="tc-authors">EISENSTEIN · SCHUMACHER · GLASSMAN</p>
+                    <p class="tc-authors">Bernie Glassman · Charles Eisenstein · Schumacher</p>
                 </div>
                 <div class="tema-card" data-tema="Social Action" onclick="selecionarTema(this)">
                     <p class="tc-name">Social Action</p>
                     <p class="tc-desc">Buddhism practiced beyond the cushion — in streets and councils.</p>
-                    <p class="tc-authors">SIVARAKSA · THICH NHAT HANH · MACY</p>
+                    <p class="tc-authors">Joanna Macy · Sulak Sivaraksa · Thich Nhat Hanh</p>
                 </div>
                 <div class="tema-card" data-tema="Simple Living" onclick="selecionarTema(this)">
                     <p class="tc-name">Simple Living</p>
                     <p class="tc-desc">Voluntary simplicity as resistance and liberation.</p>
-                    <p class="tc-authors">SCHUMACHER · SATISH KUMAR · VICKI ROBIN</p>
+                    <p class="tc-authors">Satish Kumar · Schumacher · Vicki Robin</p>
                 </div>
                 <div class="tema-card" data-tema="Local Futures" onclick="selecionarTema(this)">
                     <p class="tc-name">Local Futures</p>
                     <p class="tc-desc">Rebuilding community, food systems and place-based economies.</p>
-                    <p class="tc-authors">NORBERG-HODGE · KUMAR · EISENSTEIN</p>
+                    <p class="tc-authors">Charles Eisenstein · Helena Norberg-Hodge · Satish Kumar</p>
                 </div>
                 <div class="tema-card" data-tema="Deep Ecology" onclick="selecionarTema(this)">
                     <p class="tc-name">Deep Ecology</p>
                     <p class="tc-desc">Earth as teacher — soil, soul and the sacred.</p>
-                    <p class="tc-authors">KUMAR · HALIFAX · MACY</p>
+                    <p class="tc-authors">Joan Halifax · Joanna Macy · Satish Kumar</p>
                 </div>                
                 <div class="tema-card" data-tema="The Bodhisattva Path" onclick="selecionarTema(this)">
                     <p class="tc-name">The Bodhisattva Path</p>
                     <p class="tc-desc">Compassion in action — serving all beings without burning out.</p>
-                    <p class="tc-authors">HALIFAX · LOY · BODHI · FULLER</p>
+                    <p class="tc-authors">Bhikkhu Bodhi · Buddhist teachers · David Loy · Joan Halifax · Paul Fuller</p>
                 </div>                
             </div>
 

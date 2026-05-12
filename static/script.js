@@ -4,15 +4,7 @@
 
 const SESSION_ID = crypto.randomUUID();
 
-const VOZES_TEMA = {
-    "Gift Economy":         "Eisenstein · Glassman · Schumacher",
-    "Social Action":        "Macy · Sivaraksa · Thich Nhat Hanh",
-    "Simple Living":        "Kumar · Robin · Schumacher",
-    "Local Futures":        "Eisenstein · Kumar · Norberg-Hodge",
-    "Deep Ecology":         "Halifax · Kumar · Macy",
-    "The Bodhisattva Path": "Bodhi · Buddhist Teachers · Fuller · Halifax · Loy",
-};
-const AUTORES_TEMA = {
+const TEMAS = {
     "Gift Economy":         ["Bernie Glassman", "Charles Eisenstein", "Schumacher"],
     "Social Action":        ["Joanna Macy", "Sulak Sivaraksa", "Thich Nhat Hanh"],
     "Simple Living":        ["Satish Kumar", "Schumacher", "Vicki Robin"],
@@ -21,14 +13,13 @@ const AUTORES_TEMA = {
     "The Bodhisattva Path": ["Bhikkhu Bodhi", "Buddhist teachers", "David Loy", "Joan Halifax", "Paul Fuller"],
 };
 
-
 let temaAtivo  = "Gift Economy";
 let historico  = [];
 let idxAtivo   = 0;
 
 function atualizarSelectAutores(tema) {
     const select = document.getElementById('autor-select');
-    const autores = AUTORES_TEMA[tema] || [];
+    const autores = TEMAS[tema] || [];
     select.innerHTML = '<option value="">All voices</option>' +
         autores.map(a => `<option value="${a}">${a}</option>`).join('');
 }
@@ -47,7 +38,7 @@ function iniciarConversa() {
     document.getElementById('tela-temas').style.display = 'none';
     document.getElementById('tela-chat').style.display  = 'flex';
     document.getElementById('chat-tema-label').textContent  = temaAtivo.toUpperCase();
-    document.getElementById('chat-vozes-label').textContent = VOZES_TEMA[temaAtivo] || '';
+    document.getElementById('chat-vozes-label').textContent = (TEMAS[temaAtivo] || []).join(' · ');
     document.getElementById('pergunta').focus();
 
     // Limpa mensagens e inicia nova entrada no histórico
@@ -113,7 +104,7 @@ function abrirHistorico(idx) {
     document.getElementById('tela-temas').style.display = 'none';
     document.getElementById('tela-chat').style.display  = 'flex';
     document.getElementById('chat-tema-label').textContent  = h.tema.toUpperCase();
-    document.getElementById('chat-vozes-label').textContent = VOZES_TEMA[h.tema] || '';
+    document.getElementById('chat-vozes-label').textContent = (TEMAS[h.tema] || []).join(' · ');
 
     // Restaura mensagens salvas
     const msgs = document.getElementById('chat-messages');
