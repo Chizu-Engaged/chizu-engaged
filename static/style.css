@@ -26,7 +26,7 @@ body {
     background: var(--paper);
     color: var(--ink);
     font-family: var(--font-serif);
-    font-size: 17px;
+    font-size: 19px;
     line-height: 1.7;
 }
 
@@ -58,7 +58,7 @@ body {
 
 .sb-logo {
     font-family: var(--font-mono);
-    font-size: 0.55rem;
+    font-size: 0.65rem;
     letter-spacing: 0.25em;
     color: #a8b89a;
     margin-bottom: 0.2rem;
@@ -89,7 +89,7 @@ body {
 .sb-section {
     padding: 0.5rem 1.1rem 0.25rem;
     font-family: var(--font-mono);
-    font-size: 0.5rem;
+    font-size: 0.6rem;
     letter-spacing: 0.25em;
     color: rgba(200,191,174,0.7);
 }
@@ -108,7 +108,7 @@ body {
 
 .sb-item-theme {
     font-family: var(--font-mono);
-    font-size: 0.55rem;
+    font-size: 0.65rem;
     letter-spacing: 0.1em;
     color: #c8bfae;
     margin-bottom: 0.15rem;
@@ -116,7 +116,7 @@ body {
 
 .sb-item-date {
     font-family: var(--font-mono);
-    font-size: 0.5rem;
+    font-size: 0.6rem;
     color: rgba(200,191,174,0.6);
 }
 
@@ -166,7 +166,7 @@ body {
 
 .kicker {
     font-family: var(--font-mono);
-    font-size: 0.55rem;
+    font-size: 0.65rem;
     letter-spacing: 0.3em;
     color: var(--rust);
     margin-bottom: 0.5rem;
@@ -182,7 +182,7 @@ body {
 .hero-title em { font-style: italic; color: var(--sage); }
 
 .hero-sub {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #7a7060;
     max-width: 50ch;
     line-height: 1.7;
@@ -190,7 +190,7 @@ body {
 
 .section-label {
     font-family: var(--font-mono);
-    font-size: 0.55rem;
+    font-size: 0.65rem;
     letter-spacing: 0.25em;
     color: #a09080;
     margin-bottom: 0.8rem;
@@ -221,14 +221,14 @@ body {
 .tema-card.selected { border-color: var(--sage); }
 
 .tc-name {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 400;
     color: var(--ink);
     margin-bottom: 0.3rem;
     transition: color 0.2s;
 }
 .tc-desc {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: #7a7060;
     line-height: 1.5;
     margin-bottom: 0.5rem;
@@ -236,7 +236,7 @@ body {
 }
 .tc-authors {
     font-family: var(--font-mono);
-    font-size: 0.5rem;
+    font-size: 0.6rem;
     letter-spacing: 0.08em;
     color: #a09080;
     transition: color 0.2s;
@@ -252,7 +252,7 @@ body {
 }
 
 .start-hint {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     font-style: italic;
     color: #a09080;
 }
@@ -346,7 +346,7 @@ body {
 .msg-bubble {
     padding: 0.75rem 1rem;
     border-radius: 2px;
-    font-size: 0.9rem;
+    font-size: 1rem;
     line-height: 1.75;
 }
 .msg.user .msg-bubble {
