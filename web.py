@@ -126,11 +126,6 @@ WAITING_JS = [
     "The context unfolds...",
 ]
 
-AUTORES_OPTIONS = "".join(
-    f'<option value="{autor}">{autor}</option>'
-    for autor in sorted(AUTORES_DISPONIVEIS)
-)
-
 HTML_PAGE = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -204,6 +199,16 @@ HTML_PAGE = f"""
                     <p class="tc-desc">Rebuilding community, food systems and place-based economies.</p>
                     <p class="tc-authors">NORBERG-HODGE · KUMAR · EISENSTEIN</p>
                 </div>
+                <div class="tema-card" data-tema="Deep Ecology" onclick="selecionarTema(this)">
+                    <p class="tc-name">Deep Ecology</p>
+                    <p class="tc-desc">Earth as teacher — soil, soul and the sacred.</p>
+                    <p class="tc-authors">KUMAR · HALIFAX · MACY</p>
+                </div>                
+                <div class="tema-card" data-tema="The Bodhisattva Path" onclick="selecionarTema(this)">
+                    <p class="tc-name">The Bodhisattva Path</p>
+                    <p class="tc-desc">Compassion in action — serving all beings without burning out.</p>
+                    <p class="tc-authors">HALIFAX · LOY · BODHI · FULLER</p>
+                </div>                
             </div>
 
             <div class="start-bar">
@@ -222,7 +227,6 @@ HTML_PAGE = f"""
                 <div class="ch-right">
                     <select id="autor-select" title="Filter by author">
                         <option value="">All voices</option>
-                        {AUTORES_OPTIONS}
                     </select>
                 </div>
             </div>

@@ -5,14 +5,33 @@
 const SESSION_ID = crypto.randomUUID();
 
 const VOZES_TEMA = {
-    "Gift Economy":  "Eisenstein · Schumacher · Glassman",
-    "Social Action": "Sivaraksa · Thich Nhat Hanh · Macy",
-    "Simple Living": "Schumacher · Satish Kumar · Vicki Robin",
-    "Local Futures": "Norberg-Hodge · Kumar · Eisenstein",
+    "Gift Economy":         "Eisenstein · Glassman · Schumacher",
+    "Social Action":        "Macy · Sivaraksa · Thich Nhat Hanh",
+    "Simple Living":        "Kumar · Robin · Schumacher",
+    "Local Futures":        "Eisenstein · Kumar · Norberg-Hodge",
+    "Deep Ecology":         "Halifax · Kumar · Macy",
+    "The Bodhisattva Path": "Bodhi · Buddhist Teachers · Fuller · Halifax · Loy",
+};
+const AUTORES_TEMA = {
+    "Gift Economy":         ["Bernie Glassman", "Charles Eisenstein", "Schumacher"],
+    "Social Action":        ["Joanna Macy", "Sulak Sivaraksa", "Thich Nhat Hanh"],
+    "Simple Living":        ["Satish Kumar", "Schumacher", "Vicki Robin"],
+    "Local Futures":        ["Charles Eisenstein", "Helena Norberg-Hodge", "Satish Kumar"],
+    "Deep Ecology":         ["Joan Halifax", "Joanna Macy", "Satish Kumar"],
+    "The Bodhisattva Path": ["Bhikkhu Bodhi", "Buddhist teachers", "David Loy", "Joan Halifax", "Paul Fuller"],
 };
 
-let temaAtivo = "Gift Economy";
+
+let temaAtivo  = "Gift Economy";
 let historico  = [];
+let idxAtivo   = 0;
+
+function atualizarSelectAutores(tema) {
+    const select = document.getElementById('autor-select');
+    const autores = AUTORES_TEMA[tema] || [];
+    select.innerHTML = '<option value="">All voices</option>' +
+        autores.map(a => `<option value="${a}">${a}</option>`).join('');
+}
 
 // ============================================
 // SELEÇÃO DE TEMA
@@ -30,14 +49,26 @@ function iniciarConversa() {
     document.getElementById('chat-tema-label').textContent  = temaAtivo.toUpperCase();
     document.getElementById('chat-vozes-label').textContent = VOZES_TEMA[temaAtivo] || '';
     document.getElementById('pergunta').focus();
+
+    // Limpa mensagens e inicia nova entrada no histórico
+    const msgs = document.getElementById('chat-messages');
+    msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>Ask anything about <em>${temaAtivo}</em>.</p></div></div>`;
     adicionarHistorico(temaAtivo);
+    atualizarSelectAutores(temaAtivo);
 }
 
 function novaConversa() {
+    // Volta para tela de temas
     document.getElementById('tela-temas').style.display = '';
     document.getElementById('tela-chat').style.display  = 'none';
-    document.getElementById('chat-messages').innerHTML  =
-        '<div class="msg bot"><div class="msg-bubble"><p>Ask anything about engaged Buddhism, gift economy, simple living or social action.</p></div></div>';
+
+    // Limpa seleção de tema
+    document.querySelectorAll('.tema-card').forEach(c => c.classList.remove('selected'));
+    const hint = document.getElementById('start-hint');
+    if (hint) hint.textContent = '';
+
+    // Reset tema ativo
+    temaAtivo = 'Gift Economy';
 }
 
 // ============================================
@@ -45,18 +76,57 @@ function novaConversa() {
 // ============================================
 function adicionarHistorico(tema) {
     const ts = new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
-    historico.unshift({ tema, ts });
+    historico.unshift({ tema, ts, mensagens: [] });
+    idxAtivo = 0;
     renderHistorico();
+}
+
+function salvarMensagemHistorico(role, html) {
+    if (historico.length > 0) {
+        historico[idxAtivo].mensagens.push({ role, html });
+    }
 }
 
 function renderHistorico() {
     const lista = document.getElementById('historico-lista');
     lista.innerHTML = historico.slice(0, 10).map((h, i) => `
-        <div class="sb-item ${i === 0 ? 'active' : ''}" onclick="novaConversa()">
+        <div class="sb-item ${i === idxAtivo ? 'active' : ''}" onclick="abrirHistorico(${i})">
             <div class="sb-item-theme">${h.tema.toUpperCase()}</div>
             <div class="sb-item-date">${h.ts}</div>
         </div>
     `).join('');
+}
+
+function abrirHistorico(idx) {
+    const h = historico[idx];
+    if (!h) return;
+
+    idxAtivo = idx;
+
+    // Marca ativo na sidebar
+    document.querySelectorAll('.sb-item').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+    });
+
+    // Vai para tela de chat com o tema
+    temaAtivo = h.tema;
+    document.getElementById('tela-temas').style.display = 'none';
+    document.getElementById('tela-chat').style.display  = 'flex';
+    document.getElementById('chat-tema-label').textContent  = h.tema.toUpperCase();
+    document.getElementById('chat-vozes-label').textContent = VOZES_TEMA[h.tema] || '';
+
+    // Restaura mensagens salvas
+    const msgs = document.getElementById('chat-messages');
+    if (h.mensagens && h.mensagens.length > 0) {
+        msgs.innerHTML = h.mensagens.map(m =>
+            `<div class="msg ${m.role}"><div class="msg-bubble"><p>${m.html}</p></div></div>`
+        ).join('');
+    } else {
+        msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>Ask anything about <em>${h.tema}</em>.</p></div></div>`;
+    }
+    msgs.scrollTop = msgs.scrollHeight;
+    document.getElementById('pergunta').focus();
+    atualizarSelectAutores(h.tema);
 }
 
 // ============================================
@@ -90,7 +160,7 @@ async function fazerPergunta() {
     msgs.scrollTop = msgs.scrollHeight;
 
     // Rotação de mensagens de espera
-    const _wmsgs = [...window.WAITING_JS].sort(() => Math.random() - 0.5);
+    const _wmsgs = [...(window.WAITING_JS || ['Consulting the teachings...'])].sort(() => Math.random() - 0.5);
     let _idx = 0;
     const _rot = setInterval(() => {
         _idx = (_idx + 1) % _wmsgs.length;
@@ -139,12 +209,18 @@ function adicionarMensagem(role, texto) {
     div.innerHTML = `<div class="msg-bubble"><p>${html}</p></div>`;
     msgs.appendChild(div);
     msgs.scrollTop = msgs.scrollHeight;
+
+    // Salva no histórico
+    if (role === 'user' || role === 'bot') {
+        salvarMensagemHistorico(role, html);
+    }
 }
 
 // ============================================
 // UTILITÁRIOS
 // ============================================
 function randomMsg(arr) {
+    if (!arr || arr.length === 0) return 'Consulting the teachings...';
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -235,7 +311,6 @@ window.addEventListener('DOMContentLoaded', () => {
         btnMic.addEventListener('touchend',   pararMicrofone);
     }
 
-    // Enter no input da tela de temas não existe, mas garante o chat
     const inputChat = document.getElementById('pergunta');
     if (inputChat) {
         inputChat.addEventListener('keypress', (e) => {
