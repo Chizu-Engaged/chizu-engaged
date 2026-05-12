@@ -84,7 +84,7 @@ REGRAS_ENGAGED = (
     "'Joanna Macy, in Active Hope, invites us to...'\n"
     "4. NEVER mention 'context', 'source' or internal mechanics.\n"
     "5. If CONTEXT IS EMPTY → BLOCKED\n"
-    "6. MAXIMUM 5 SENTENCES. No exceptions.\n\n"
+    "6. MAXIMUM 30 SENTENCES. No exceptions.\n\n"
 )
 
 # ============================================

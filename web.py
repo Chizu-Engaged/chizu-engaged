@@ -114,12 +114,7 @@ if os.path.exists(os.path.join(BASE_DIR, "legal")):
 # ============================================
 # Textos da Interface
 # ============================================
-FAREWELL_JS = [
-    "May all beings benefit.",
-    "Go in peace.",
-    "The path opens before you.",
-    "Gassho.",
-]
+
 
 WAITING_JS = [
     "Listening to the teachings...",
@@ -132,6 +127,21 @@ WAITING_JS = [
     "The silence speaks...",
     "The teachers respond...",
     "The context unfolds...",
+    "Breathing with the question...",
+    "Turning the wheel of dharma...",
+    "The sangha remembers...",
+    "Cultivating right intention...",
+    "The sutras open...",
+    "Walking the path together...",
+    "Mindfully attending...",
+    "The heart of understanding...",
+    "Interbeing reveals...",
+    "The bell of mindfulness sounds...",
+    "Transforming suffering...",
+    "The four immeasurables arise...",
+    "Engaged practice awakens...",
+    "The acervo breathes...",
+    "Right view emerges...",
 ]
 
 
@@ -229,11 +239,7 @@ HTML_PAGE = f"""<!DOCTYPE html>
                     <span class="ch-theme" id="chat-tema-label">GIFT ECONOMY</span>
                     <span class="ch-voices" id="chat-vozes-label">Bernie Glassman · Charles Eisenstein · Schumacher</span>
                 </div>
-                <div class="ch-right">
-                    <select id="autor-select" title="Filter by author">
-                        <option value="">All voices</option>
-                    </select>
-                </div>
+
             </div>
 
             <div class="chat-messages" id="chat-messages">
@@ -244,10 +250,15 @@ HTML_PAGE = f"""<!DOCTYPE html>
                 </div>
             </div>
 
+
+
             <div class="chat-input-area">
                 <input type="text" id="pergunta"
                     placeholder="Ask the teachings..."
                     autocomplete="off" spellcheck="false" maxlength="400">
+                <select id="autor-select" title="Filter by author">
+                    <option value="">All voices</option>
+                </select>                    
                 <button id="btn-enviar" onclick="fazerPergunta()">→</button>
             </div>
         </div>
@@ -256,7 +267,6 @@ HTML_PAGE = f"""<!DOCTYPE html>
 </div>
 
 <script>
-    window.FAREWELL_JS = {json.dumps(FAREWELL_JS)};
     window.WAITING_JS  = {json.dumps(WAITING_JS)};
 </script>
 <script src="/static/script.js?v=5"></script>
@@ -296,9 +306,6 @@ async def ask(request: Request):
 
         if not pergunta:
             return JSONResponse({"resposta": resposta_bloqueio()})
-
-        if pergunta.lower() in ["exit", "bye", "gassho", "thanks", "quit", "ok"]:
-            return JSONResponse({"resposta": random.choice(FAREWELL_JS)})
 
         autor_raw    = data.get("autor", None)
         autor_filtro = autor_raw if autor_raw in AUTORES_DISPONIVEIS else None

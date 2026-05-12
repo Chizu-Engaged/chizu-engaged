@@ -281,17 +281,18 @@ body {
     overflow: hidden;
 }
 
+/* Cabeçalho do chat: apenas título e autores (sem seletor) */
 .chat-header {
     padding: 0.8rem 1.4rem;
     border-bottom: 0.5px solid var(--mist);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     background: var(--paper);
     flex-shrink: 0;
 }
 
-.ch-left { display: flex; flex-direction: column; }
+.ch-left { 
+    display: flex; 
+    flex-direction: column; 
+}
 
 .ch-theme {
     font-family: var(--font-mono);
@@ -306,24 +307,83 @@ body {
     color: var(--ink);
 }
 
-.ch-right select {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    padding: 0.3rem 1.6rem 0.3rem 0.7rem;
+/* Área de input: campo + seletor + botão na mesma linha */
+.chat-input-area {
+    padding: 0.8rem 1.4rem;
+    border-top: 0.5px solid var(--mist);
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 0.7rem 1rem;
     border: 0.5px solid var(--mist);
     border-radius: 2px;
     background: var(--white);
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.chat-input-area input:focus {
+    border-color: var(--sage);
+    box-shadow: 0 0 0 3px rgba(107,124,94,0.08);
+}
+.chat-input-area input::placeholder {
+    color: var(--mist);
+    font-style: italic;
+}
+
+/* Seletor de autores (dentro da área de input) */
+#autor-select {
+    background: transparent;
+    border: none;
+    padding: 0.7rem 1.6rem 0.7rem 0.8rem;
+    font-family: var(--font-serif);
+    font-size: 0.9rem;
     color: var(--ink);
     cursor: pointer;
-    outline: none;
     appearance: none;
     -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7c5e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7c5e' stroke-width='1.8'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 0.6rem center;
-    transition: border-color 0.2s;
+    background-position: right 0.5rem center;
+    background-size: 12px;
+    transition: background-color 0.2s;
 }
-.ch-right select:hover { border-color: var(--sage); }
+#autor-select:hover {
+    background-color: var(--beige-mid);
+    border-radius: 2px;
+}
+#autor-select:focus {
+    outline: none;
+    background-color: var(--beige-mid);
+    border-radius: 2px;
+}
+
+/* Botão enviar */
+#btn-enviar {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 2px;
+    background: var(--sage);
+    color: var(--beige-soft);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    transition: background 0.2s;
+}
+#btn-enviar:hover { background: var(--ink); }
 
 /* Mensagens */
 .chat-messages {
@@ -366,38 +426,7 @@ body {
 .msg-bubble p { margin: 0 0 0.5rem; }
 .msg-bubble p:last-child { margin-bottom: 0; }
 
-/* Input */
-.chat-input-area {
-    padding: 0.8rem 1.4rem;
-    border-top: 0.5px solid var(--mist);
-    background: var(--paper);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-.chat-input-area input {
-    flex: 1;
-    padding: 0.7rem 1rem;
-    border: 0.5px solid var(--mist);
-    border-radius: 2px;
-    background: var(--white);
-    font-family: var(--font-serif);
-    font-size: 0.95rem;
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.chat-input-area input:focus {
-    border-color: var(--sage);
-    box-shadow: 0 0 0 3px rgba(107,124,94,0.08);
-}
-.chat-input-area input::placeholder {
-    color: var(--mist);
-    font-style: italic;
-}
-
+/* Botão de voz (opcional) */
 #btn-mic {
     width: 34px;
     height: 34px;
@@ -426,24 +455,6 @@ body {
     100% { box-shadow: 0 0 0 0 rgba(224,32,32,0); }
 }
 
-#btn-enviar {
-    width: 34px;
-    height: 34px;
-    border: none;
-    border-radius: 2px;
-    background: var(--sage);
-    color: var(--beige-soft);
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    padding: 0;
-    transition: background 0.2s;
-}
-#btn-enviar:hover { background: var(--ink); }
-
 /* ============================================
    RESPONSIVO
    ============================================ */
@@ -456,4 +467,11 @@ body {
     .chat-messages { padding: 0.8rem 1rem; }
     .chat-input-area { padding: 0.6rem 1rem; }
     .msg { max-width: 95%; }
+    
+    /* Em telas pequenas, o select pode ficar menor */
+    #autor-select {
+        font-size: 0.75rem;
+        padding: 0.5rem 1.4rem 0.5rem 0.6rem;
+        background-position: right 0.3rem center;
+    }
 }
