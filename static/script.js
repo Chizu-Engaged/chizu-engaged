@@ -4,6 +4,7 @@
 
 const SESSION_ID = crypto.randomUUID();
 
+
 const TEMAS = {
     "Gift Economy":         ["Bernie Glassman", "Charles Eisenstein", "Schumacher"],
     "Social Action":        ["Joanna Macy", "Sulak Sivaraksa", "Thich Nhat Hanh"],
@@ -127,13 +128,6 @@ async function fazerPergunta() {
     const input    = document.getElementById('pergunta');
     const textoRaw = input.value.trim();
     if (!textoRaw) return;
-
-    // Palavras de despedida
-    if (['exit', 'bye', 'gassho', 'thanks', 'quit'].includes(textoRaw.toLowerCase())) {
-        adicionarMensagem('bot', randomMsg(window.FAREWELL_JS));
-        input.value = '';
-        return;
-    }
 
     const autorSelect = document.getElementById('autor-select');
     const autorFiltro = autorSelect ? autorSelect.value : '';
