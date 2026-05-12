@@ -164,8 +164,9 @@ HTML_PAGE = f"""<!DOCTYPE html>
         <div class="sb-section">HISTORY</div>
         <div id="historico-lista"></div>
         <div class="sb-footer">
-            <a href="https://chizu.ia.br" class="sb-link">← Chizu</a>
-            <span>engaged.chizu.ia.br</span>
+            <a href="https://chizu.ia.br" class="sb-link">Chizu</a>
+            <a href="/static/legal/legal-notice.html" class="sb-link">Legal Notice</a>
+            <a href="/static/legal/copyright.html" class="sb-link">Copyright</a>
         </div>
     </aside>
 
