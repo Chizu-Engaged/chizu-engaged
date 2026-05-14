@@ -129,8 +129,8 @@ body {
     flex-direction: column;
     gap: 0.3rem;
     font-family: var(--font-mono);
-    font-size: 0.5rem;
-    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
     color: rgba(200,191,174,0.55);
 }
 

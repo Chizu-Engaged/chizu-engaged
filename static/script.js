@@ -36,7 +36,7 @@ function iniciarConversa() {
     document.getElementById('pergunta').focus();
 
     const msgs = document.getElementById('chat-messages');
-    msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>Ask anything about <em>${temaAtivo}</em>.</p></div></div>`;
+    msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>What would you like to explore today?</p></div></div>`;
     adicionarHistorico(temaAtivo);
     setTimeout(() => atualizarSelectAutores(temaAtivo), 100);
 }
@@ -114,20 +114,20 @@ function abrirHistorico(idx) {
 }
 
 let autorSelecionado = null;
-
 function iniciarConversaAutor(autor) {
     autorSelecionado = autor;
     temaAtivo = "All Voices";
     document.getElementById('tela-temas').style.display = 'none';
     document.getElementById('tela-chat').style.display = 'flex';
     document.getElementById('chat-tema-label').textContent = "VOICE: " + autor.toUpperCase();
-    document.getElementById('chat-vozes-label').textContent = autor;
-    // Esconde o seletor de autores (já que o autor é fixo)
+    // Nota: "inspired by their writings" (sem repetir o nome do autor)
+    document.getElementById('chat-vozes-label').innerHTML = '<span class="voice-note" style="font-size:0.85rem; opacity:0.7;">Answers inspired by their writings.</span>';
     const select = document.getElementById('autor-select');
     if (select) select.style.display = 'none';
     document.getElementById('pergunta').focus();
     const msgs = document.getElementById('chat-messages');
-    msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>Ask anything to <strong>${autor}</strong>.</p></div></div>`;
+    // Mensagem do bot: apenas a pergunta
+    msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>What would you like to explore today?</p></div></div>`;
     adicionarHistorico("Voice: " + autor);
 }
 // ============================================

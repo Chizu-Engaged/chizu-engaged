@@ -198,9 +198,10 @@ HTML_PAGE = f"""<!DOCTYPE html>
         <div class="sb-section">HISTORY</div>
         <div id="historico-lista"></div>
         <div class="sb-footer">
-            <a href="https://chizu.ia.br" class="sb-link">Chizu</a>
+            <a href="/static/legal/how-it-works.html" class="sb-link">How it works<br>a digital guide</a>
             <a href="/static/legal/legal-notice.html" class="sb-link">Legal Notice</a>
             <a href="/static/legal/copyright.html" class="sb-link">Copyright</a>
+            <a href="https://chizu.ia.br" class="sb-link">Chizu</a>            
         </div>
     </aside>
 
@@ -210,9 +211,10 @@ HTML_PAGE = f"""<!DOCTYPE html>
         <!-- TELA DE TEMAS -->
         <div id="tela-temas" class="tela-temas">
             <div class="hero">
-                <p class="kicker">ZEN ENGAJADO · IN ENGLISH</p>
+                <p class="kicker">AI Conversations · Guided by Engaged Masters</p>
                 <h1 class="hero-title">Engaged Buddhism<br>&amp; <em>Simple Economics</em></h1>
-                <p class="hero-sub">Choose a theme — the system selects the voices that speak to it most deeply.</p>
+                <p class="chat-callout">Ask a question — get an answer woven from the wisdom of Bernard Glassman, Thich Nhat Hanh, Joanna Macy &amp; others.</p>                
+                <p class="hero-sub">Choose a theme or authors — the system selects the voices that speak to it most deeply.</p>
             </div>
 
             <p class="section-label">CHOOSE A THEME TO BEGIN</p>
@@ -249,6 +251,8 @@ HTML_PAGE = f"""<!DOCTYPE html>
                     <p class="tc-authors">Bhikkhu Bodhi · Buddhist teachers · David Loy · Paul Fuller</p>
                 </div>
             </div>
+
+            <p class="section-label"></p>
 
             <div class="section-label">ALL VOICES</div>
             <div class="autores-grid" id="autores-grid-desktop">
