@@ -298,7 +298,7 @@ HTML_PAGE = f"""<!DOCTYPE html>
     window.TEMAS_DISPONIVEIS = {json.dumps(TEMAS_DISPONIVEIS)};
     window.AUTORES_DISPONIVEIS = {json.dumps(AUTORES_DISPONIVEIS)};
 </script>
-<script src="/static/script.js?v=1"></script>
+<script src="/static/script.js?v=2"></script>
 </body>
 </html>
 """
