@@ -427,34 +427,6 @@ body {
 .msg-bubble p { margin: 0 0 0.5rem; }
 .msg-bubble p:last-child { margin-bottom: 0; }
 
-/* Botão de voz (opcional) */
-#btn-mic {
-    width: 34px;
-    height: 34px;
-    border: 0.5px solid var(--mist);
-    border-radius: 2px;
-    background: var(--white);
-    color: var(--sage);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    padding: 0;
-    transition: background 0.2s, color 0.2s;
-}
-#btn-mic:hover { background: var(--beige-mid); }
-#btn-mic.ouvindo {
-    background: #e02020;
-    color: white;
-    border-color: #e02020;
-    animation: pulsar 1.2s ease-in-out infinite;
-}
-@keyframes pulsar {
-    0%   { box-shadow: 0 0 0 0 rgba(224,32,32,0.4); }
-    70%  { box-shadow: 0 0 0 8px rgba(224,32,32,0); }
-    100% { box-shadow: 0 0 0 0 rgba(224,32,32,0); }
-}
 
 /* ============================================
    RESPONSIVO

@@ -2,25 +2,18 @@
 // CHIZU ENGAGED — script.js
 // ============================================
 
-const SESSION_ID = crypto.randomUUID();
+const SESSION_ID = Math.random().toString(36).slice(2) + Date.now();
 
-
-const TEMAS = {
-    "Gift Economy":         ["Bernie Glassman", "Charles Eisenstein", "Schumacher"],
-    "Social Action":        ["Joanna Macy", "Sulak Sivaraksa", "Thich Nhat Hanh"],
-    "Simple Living":        ["Satish Kumar", "Schumacher", "Vicki Robin"],
-    "Local Futures":        ["Charles Eisenstein", "Helena Norberg-Hodge", "Satish Kumar"],
-    "Deep Ecology":         ["Joan Halifax", "Joanna Macy", "Satish Kumar"],
-    "The Bodhisattva Path": ["Bhikkhu Bodhi", "Buddhist teachers", "David Loy", "Joan Halifax", "Paul Fuller"],
-};
 
 let temaAtivo  = "Gift Economy";
 let historico  = [];
 let idxAtivo   = 0;
+const TEMAS    = window.TEMAS_DISPONIVEIS || {};
 
 function atualizarSelectAutores(tema) {
     const select = document.getElementById('autor-select');
-    const autores = TEMAS[tema] || [];
+    if (!select) return;
+    const autores = (window.TEMAS_DISPONIVEIS && window.TEMAS_DISPONIVEIS[tema]) || [];
     select.innerHTML = '<option value="">All voices</option>' +
         autores.map(a => `<option value="${a}">${a}</option>`).join('');
 }
@@ -39,14 +32,13 @@ function iniciarConversa() {
     document.getElementById('tela-temas').style.display = 'none';
     document.getElementById('tela-chat').style.display  = 'flex';
     document.getElementById('chat-tema-label').textContent  = temaAtivo.toUpperCase();
-    document.getElementById('chat-vozes-label').textContent = (TEMAS[temaAtivo] || []).join(' · ');
+    document.getElementById('chat-vozes-label').textContent = (window.TEMAS_DISPONIVEIS[temaAtivo] || []).join(' · ');
     document.getElementById('pergunta').focus();
 
-    // Limpa mensagens e inicia nova entrada no histórico
     const msgs = document.getElementById('chat-messages');
     msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>Ask anything about <em>${temaAtivo}</em>.</p></div></div>`;
     adicionarHistorico(temaAtivo);
-    atualizarSelectAutores(temaAtivo);
+    setTimeout(() => atualizarSelectAutores(temaAtivo), 100);
 }
 
 function novaConversa() {
@@ -105,7 +97,7 @@ function abrirHistorico(idx) {
     document.getElementById('tela-temas').style.display = 'none';
     document.getElementById('tela-chat').style.display  = 'flex';
     document.getElementById('chat-tema-label').textContent  = h.tema.toUpperCase();
-    document.getElementById('chat-vozes-label').textContent = (TEMAS[h.tema] || []).join(' · ');
+    document.getElementById('chat-vozes-label').textContent = (window.TEMAS_DISPONIVEIS[h.tema] || []).join(' · ');
 
     // Restaura mensagens salvas
     const msgs = document.getElementById('chat-messages');

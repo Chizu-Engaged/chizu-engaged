@@ -10,13 +10,14 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from collections import defaultdict
 
-
+# Configurar o path ANTES de importar módulos locais
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 load_dotenv(os.path.join(BASE_DIR, ".env"), override=True)
 
+# Agora sim, importar do core.engine e core.ai_provider
 try:
     from core.ai_provider import FreeAIProvider
     from core.engine import (
@@ -26,6 +27,9 @@ try:
 except ImportError as e:
     print(f"❌ Import error: {e}")
     sys.exit(1)
+
+# Agora TEMAS_DISPONIVEIS está garantido
+temas_json = json.dumps(TEMAS_DISPONIVEIS)  # converte para string JSON
 
 
 # ============================================
@@ -41,7 +45,17 @@ MARCADORES_BLOQUEIO = ["BLOQUEADO", "EMPTY", "VAZIO"]
 RATE_LIMIT = 10
 JANELA_SEG = 60
 _contadores: dict = defaultdict(list)
-
+#-------------------------------------------------------------------
+def is_mobile(request: Request) -> bool:
+    user_agent = request.headers.get("user-agent", "").lower()
+    mobile_keywords = [
+        'mobile', 'android', 'iphone', 'ipod', 'blackberry', 'windows phone',
+        'samsung', 'sm-', 'galaxy', 'nexus', 'xiaomi', 'mi ', 'redmi',
+        'oppo', 'vivo', 'huawei', 'honor', 'realme', 'motorola', 'moto',
+        'lg-', 'lge', 'sony', 'xperia', 'htc', 'nokia'
+    ]
+    return any(keyword in user_agent for keyword in mobile_keywords)
+#-------------------------------------------------------------------
 
 def checar_rate_limit(ip: str) -> bool:
     agora = time.time()
@@ -269,19 +283,80 @@ HTML_PAGE = f"""<!DOCTYPE html>
 
 <script>
     window.WAITING_JS  = {json.dumps(WAITING_JS)};
+    window.TEMAS_DISPONIVEIS = {json.dumps(TEMAS_DISPONIVEIS)};
+    window.AUTORES_DISPONIVEIS = {json.dumps(AUTORES_DISPONIVEIS)};
 </script>
-<script src="/static/script.js?v=5"></script>
+<script src="/static/script.js?v=1"></script>
 </body>
 </html>
 """
+#-------------------------------------------------------------------
+# Gera os cards de temas dinamicamente
+temas_html = ""
+for tema, autores in TEMAS_DISPONIVEIS.items():
+    autores_str = " · ".join(autores)
+    temas_html += f"""
+    <div class="theme-card" data-tema="{tema}">
+        <div class="theme-name">{tema}</div>
+    </div>
+    """
+# Gera os cards de autores (vozes) individualmente
+autores_html = ""
+for autor in AUTORES_DISPONIVEIS:
+    autores_html += f"""
+    <div class="author-card" data-autor="{autor}">
+        <div class="author-name">{autor}</div>
+    </div>
+    """
 
+HTML_PAGE_MOBILE = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Chizu Engaged · Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/mobile.css?v=2">
+    <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">    
+</head>
+<body>
+    <div class="mobile-header">
+        <h1>Engaged Buddhism<br>&amp; <em>Simple Economics</em></h1>
+        <div class="sub">CHOOSE A THEME</div>
+    </div>
+
+    <!-- Seção de temas -->
+    <div class="section-title">Themes</div>
+    <div id="theme-list" class="theme-list">
+        {temas_html}
+    </div>
+
+    <!-- Seção de autores (vozes) -->
+    <div class="section-title">All Voices</div>
+    <div id="author-list" class="author-list">
+        {autores_html}
+    </div>
+
+    <div class="mobile-footer">Tap a theme or voice to start</div>
+    <script src="/static/script-mobile.js?v=2"></script>
+</body>
+</html>"""
+#-------------------------------------------------------------------
 
 # ============================================
 # Rotas
 # ============================================
+#-------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
-async def get_index():
-    return HTML_PAGE
+async def get_index(request: Request):
+    if is_mobile(request):
+        return HTMLResponse(content=HTML_PAGE_MOBILE)
+    else:
+        return HTMLResponse(content=HTML_PAGE)
+#-------------------------------------------------------------------
+
 
 
 @app.head("/")
