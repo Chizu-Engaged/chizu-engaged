@@ -178,7 +178,7 @@ HTML_PAGE = f"""<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chizu Engaged · Engaged Buddhism & Simple Economics</title>
-    <link rel="stylesheet" href="/static/style.css?v=1">
+    <link rel="stylesheet" href="/static/style.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
@@ -294,7 +294,7 @@ HTML_PAGE = f"""<!DOCTYPE html>
     window.TEMAS_DISPONIVEIS = {json.dumps(TEMAS_DISPONIVEIS)};
     window.AUTORES_DISPONIVEIS = {json.dumps(AUTORES_DISPONIVEIS)};
 </script>
-<script src="/static/script.js?v=1"></script>
+<script src="/static/script.js?v=2"></script>
 </body>
 </html>
 """
@@ -325,7 +325,7 @@ HTML_PAGE_MOBILE = f"""<!DOCTYPE html>
     <title>Chizu Engaged · Mobile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/mobile.css?v=1">
+    <link rel="stylesheet" href="/static/mobile.css?v=2">
     <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">    
 </head>
@@ -348,7 +348,7 @@ HTML_PAGE_MOBILE = f"""<!DOCTYPE html>
     </div>
 
     <div class="mobile-footer">Tap a theme or voice to start</div>
-    <script src="/static/script-mobile.js?v=1"></script>
+    <script src="/static/script-mobile.js?v=2"></script>
 </body>
 </html>"""
 #-------------------------------------------------------------------
