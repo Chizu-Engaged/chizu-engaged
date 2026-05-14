@@ -22,10 +22,17 @@ function atualizarSelectAutores(tema) {
 // SELEÇÃO DE TEMA
 // ============================================
 function selecionarTema(el) {
+    // Remove a classe 'selected' de todos os cards e adiciona no clicado
     document.querySelectorAll('.tema-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     temaAtivo = el.dataset.tema;
-    document.getElementById('start-hint').textContent = temaAtivo + ' selected';
+    
+    // (Opcional) se ainda existir algum elemento com id 'start-hint', remove ou ignora
+    const hint = document.getElementById('start-hint');
+    if (hint) hint.textContent = temaAtivo + ' selected';
+    
+    // JÁ INICIA A CONVERSA!
+    iniciarConversa();
 }
 
 function iniciarConversa() {

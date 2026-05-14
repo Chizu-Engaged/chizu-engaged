@@ -255,10 +255,6 @@ HTML_PAGE = f"""<!DOCTYPE html>
                 {autores_html_desktop}
             </div>
 
-            <div class="start-bar">
-                <span id="start-hint" class="start-hint">Gift Economy selected</span>
-                <button class="start-btn" onclick="iniciarConversa()">Begin conversation →</button>
-            </div>
         </div>
 
         <!-- TELA DE CHAT -->
