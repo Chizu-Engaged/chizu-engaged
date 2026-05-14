@@ -141,15 +141,30 @@ async function enviarPerguntaMobile(tipo, valor) {
 
     let autorFiltro = '';
     if (tipo === 'autor') {
-        autorFiltro = valor;  // autor fixo
+        autorFiltro = valor;
     }
-
+    // Para tema, autorFiltro permanece vazio
 
     adicionarMensagemMobile('user', texto);
     input.value = '';
     input.disabled = true;
 
-    const waitingId = adicionarMensagemMobile('bot', '<em>Listening...</em>', true);
+    // Cria mensagem de espera com classe 'waiting'
+    const waitingId = adicionarMensagemMobile('bot', '<em>Listening to the teachings...</em>', true);
+    const waitingElem = document.getElementById(waitingId);
+    
+    // Rotação de mensagens de espera (igual ao desktop)
+    const _wmsgs = [...(window.WAITING_JS || ['Consulting the teachings...'])].sort(() => Math.random() - 0.5);
+    let _idx = 0;
+    const _rot = setInterval(() => {
+        if (!waitingElem || !waitingElem.isConnected) {
+            clearInterval(_rot);
+            return;
+        }
+        _idx = (_idx + 1) % _wmsgs.length;
+        const bubble = waitingElem.querySelector('.msg-bubble');
+        if (bubble) bubble.innerHTML = `<em>${_wmsgs[_idx]}</em>`;
+    }, 2500);
 
     try {
         const payload = {
@@ -164,12 +179,13 @@ async function enviarPerguntaMobile(tipo, valor) {
             body: JSON.stringify(payload)
         });
         const data = await response.json();
-        const waitingElem = document.getElementById(waitingId);
-        if (waitingElem) waitingElem.remove();
+
+        clearInterval(_rot);
+        if (waitingElem && waitingElem.isConnected) waitingElem.remove();
         adicionarMensagemMobile('bot', data.resposta);
     } catch (err) {
-        const waitingElem = document.getElementById(waitingId);
-        if (waitingElem) waitingElem.remove();
+        clearInterval(_rot);
+        if (waitingElem && waitingElem.isConnected) waitingElem.remove();
         adicionarMensagemMobile('bot', 'The silence holds this question for now.');
     } finally {
         input.disabled = false;

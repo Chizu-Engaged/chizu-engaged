@@ -160,6 +160,15 @@ WAITING_JS = [
 ]
 
 
+# Gera os cards de autores para desktop
+autores_html_desktop = ""
+for autor in AUTORES_DISPONIVEIS:
+    autores_html_desktop += f"""
+    <div class="author-card" data-autor="{autor}">
+        <div class="author-name">{autor}</div>
+    </div>
+    """
+
 # ============================================
 # HTML
 # ============================================
@@ -241,6 +250,11 @@ HTML_PAGE = f"""<!DOCTYPE html>
                 </div>
             </div>
 
+            <div class="section-label">ALL VOICES</div>
+            <div class="autores-grid" id="autores-grid-desktop">
+                {autores_html_desktop}
+            </div>
+
             <div class="start-bar">
                 <span id="start-hint" class="start-hint">Gift Economy selected</span>
                 <button class="start-btn" onclick="iniciarConversa()">Begin conversation →</button>
@@ -264,8 +278,6 @@ HTML_PAGE = f"""<!DOCTYPE html>
                     </div>
                 </div>
             </div>
-
-
 
             <div class="chat-input-area">
                 <input type="text" id="pergunta"

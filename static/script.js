@@ -113,6 +113,23 @@ function abrirHistorico(idx) {
     atualizarSelectAutores(h.tema);
 }
 
+let autorSelecionado = null;
+
+function iniciarConversaAutor(autor) {
+    autorSelecionado = autor;
+    temaAtivo = "All Voices";
+    document.getElementById('tela-temas').style.display = 'none';
+    document.getElementById('tela-chat').style.display = 'flex';
+    document.getElementById('chat-tema-label').textContent = "VOICE: " + autor.toUpperCase();
+    document.getElementById('chat-vozes-label').textContent = autor;
+    // Esconde o seletor de autores (já que o autor é fixo)
+    const select = document.getElementById('autor-select');
+    if (select) select.style.display = 'none';
+    document.getElementById('pergunta').focus();
+    const msgs = document.getElementById('chat-messages');
+    msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>Ask anything to <strong>${autor}</strong>.</p></div></div>`;
+    adicionarHistorico("Voice: " + autor);
+}
 // ============================================
 // ENVIO DE PERGUNTA
 // ============================================
@@ -280,13 +297,13 @@ function pararMicrofone(e) {
 // INICIALIZAÇÃO
 // ============================================
 window.addEventListener('DOMContentLoaded', () => {
-    const btnMic = document.getElementById('btn-mic');
-    if (btnMic && SR) {
-        btnMic.addEventListener('mousedown',  iniciarMicrofone);
-        btnMic.addEventListener('mouseup',    pararMicrofone);
-        btnMic.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarMicrofone(); }, { passive: false });
-        btnMic.addEventListener('touchend',   pararMicrofone);
-    }
+
+    document.querySelectorAll('.author-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const autor = card.getAttribute('data-autor');
+            iniciarConversaAutor(autor);
+        });
+    });
 
     const inputChat = document.getElementById('pergunta');
     if (inputChat) {
