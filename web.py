@@ -1,3 +1,6 @@
+#
+# web.py
+#
 import sys
 import os
 import random
@@ -41,7 +44,7 @@ ai_provider         = FreeAIProvider()
 biblioteca_engaged  = carregar_biblioteca()
 conversation_memory = TTLCache(maxsize=200, ttl=3600)
 
-MARCADORES_BLOQUEIO = ["BLOQUEADO", "EMPTY", "VAZIO"]
+MARCADORES_BLOQUEIO = ["BLOQUEADO", "VAZIO", "BLOCKED", "EMPTY"]
 
 RATE_LIMIT = 10
 JANELA_SEG = 60
@@ -217,8 +220,14 @@ HTML_PAGE = f"""<!DOCTYPE html>
 
             <p class="section-label">CHOOSE A THEME TO BEGIN</p>
 
+
             <div class="temas-grid">
-                <div class="tema-card selected" data-tema="Gift Economy" onclick="selecionarTema(this)">
+                <div class="tema-card selected" data-tema="" onclick="selecionarTema(this)">
+                    <p class="tc-name">All Voices</p>
+                    <p class="tc-desc">The full chorus — all authors, all themes. Let the wisdom speak freely.</p>
+                    <p class="tc-authors">Bernie Glassman · Charles Eisenstein · Thich Nhat Hanh · Joanna Macy · Satish Kumar · Helena Norberg-Hodge · Vicki Robin · Bhikkhu Bodhi · David Loy · Sulak Sivaraksa · Joan Halifax · E.F. Schumacher · Paul Fuller · Buddhist teachers</p>
+                </div>
+                <div class="tema-card" data-tema="Gift Economy" onclick="selecionarTema(this)">
                     <p class="tc-name">Gift Economy</p>
                     <p class="tc-desc">Money, generosity and sacred exchange as spiritual practice.</p>
                     <p class="tc-authors">Bernie Glassman · Charles Eisenstein · Schumacher</p>
@@ -318,7 +327,6 @@ for autor in AUTORES_DISPONIVEIS:
         <div class="author-name">{autor}</div>
     </div>
     """
-
 HTML_PAGE_MOBILE = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -340,11 +348,16 @@ HTML_PAGE_MOBILE = f"""<!DOCTYPE html>
     <!-- Seção de temas -->
     <div class="section-title">Themes</div>
     <div id="theme-list" class="theme-list">
+        <!-- Card All Voices (tema vazio) -->
+        <div class="theme-card" data-tema="" onclick="selecionarTemaMobile(this)">
+            <div class="theme-name">All Voices</div>
+            <div class="theme-desc">All authors, all themes</div>
+        </div>
         {temas_html}
     </div>
 
     <!-- Seção de autores (vozes) -->
-    <div class="section-title">All Voices</div>
+    <div class="section-title">Voices</div>
     <div id="author-list" class="author-list">
         {autores_html}
     </div>
@@ -353,6 +366,7 @@ HTML_PAGE_MOBILE = f"""<!DOCTYPE html>
     <script src="/static/script-mobile.js?v=2"></script>
 </body>
 </html>"""
+
 #-------------------------------------------------------------------
 
 # ============================================
@@ -411,7 +425,8 @@ async def ask(request: Request):
             autor_filtro=autor_filtro,
             tema_filtro=tema_filtro
         )
-        mensagens_base, perfil_nome = montar_prompt(
+
+        mensagens_base, perfil_nome, autor_principal = montar_prompt(
             pergunta, contexto,
             autor_filtro=autor_filtro,
             tema_filtro=tema_filtro
@@ -429,13 +444,6 @@ async def ask(request: Request):
         resposta_raw, ia_nome = ai_provider.chat(prompt_completo, provider_nome=provider_nome)
         resposta_limpa        = limpar_resposta(resposta_raw)
 
-        # if DEBUG:
-        #     print("-" * 50)
-        #     print("      IA:", ia_nome)
-        #     print("   THEME:", perfil_nome)
-        #     print("QUESTION:", pergunta)
-        #     print(" CONTEXT:", contexto[:120])
-
 
         if DEBUG:
             process = psutil.Process(os.getpid())
@@ -448,8 +456,29 @@ async def ask(request: Request):
             cpu_percent = process.cpu_percent(interval=None) 
             threads = process.num_threads()
 
+            # Define o tipo do perfil
+            if autor_filtro:
+                tipo_perfil = "Autor"
+                autor_info = f" → selecionado: {autor_filtro}"
+            elif tema_filtro:
+                tipo_perfil = "Tema"
+                autor_info = f" → autor usado: {autor_principal}" if autor_principal else ""
+            elif perfil_nome == "Engaged Buddhism" and not tema_filtro and not autor_filtro:
+                # Caso especial: All Voices (tema vazio)
+                tipo_perfil = "Tema"
+                perfil_nome_exibicao = "All Voices"
+                autor_info = f" → autores encontrados: {autor_principal}" if autor_principal else ""
+            else:
+                tipo_perfil = "Perfil"
+                autor_info = ""
+                perfil_nome_exibicao = perfil_nome
+
             print("\n" + "=" * 60)
-            print(f"IA / PERFIL     : {ia_nome} | Tema: {perfil_nome}")
+
+            print(f"IA              : {ia_nome}  ")    
+            print(f"tipo_perfil     : {tipo_perfil}  ")
+            print(f"perfil_nome     : {perfil_nome}{autor_info}")
+
             print("-" * 60)
             print(f"MEMÓRIA (RAM)   : {round(mem_rss, 2)} MB ({round(mem_percent, 2)}% do sistema)")
             print(f"CPU / THREADS   : {cpu_percent}% de uso | {threads} threads ativas")

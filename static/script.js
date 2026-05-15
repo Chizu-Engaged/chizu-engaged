@@ -31,8 +31,18 @@ function selecionarTema(el) {
 function iniciarConversa() {
     document.getElementById('tela-temas').style.display = 'none';
     document.getElementById('tela-chat').style.display  = 'flex';
-    document.getElementById('chat-tema-label').textContent  = temaAtivo.toUpperCase();
-    document.getElementById('chat-vozes-label').textContent = (window.TEMAS_DISPONIVEIS[temaAtivo] || []).join(' · ');
+
+    // Trata o caso especial "All Voices" (tema vazio)
+    if (temaAtivo === "") {
+        document.getElementById('chat-tema-label').textContent = "ALL VOICES";
+        // Junta todos os autores disponíveis
+        const todosAutores = window.AUTORES_DISPONIVEIS || [];
+        document.getElementById('chat-vozes-label').textContent = todosAutores.join(' · ');
+    } else {
+        document.getElementById('chat-tema-label').textContent = temaAtivo.toUpperCase();
+        document.getElementById('chat-vozes-label').textContent = (window.TEMAS_DISPONIVEIS[temaAtivo] || []).join(' · ');
+    }
+
     document.getElementById('pergunta').focus();
 
     const msgs = document.getElementById('chat-messages');
@@ -40,7 +50,6 @@ function iniciarConversa() {
     adicionarHistorico(temaAtivo);
     setTimeout(() => atualizarSelectAutores(temaAtivo), 100);
 }
-
 function novaConversa() {
     // Volta para tela de temas
     document.getElementById('tela-temas').style.display = '';

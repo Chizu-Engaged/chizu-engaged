@@ -3,9 +3,12 @@ let chatAtivo = null;      // { tipo, valor, autoresList }
 let mensagens = [];        // histórico local de mensagens
 
 function iniciarChat(tipo, valor, autoresList = []) {
-    // Oculta a tela de seleção
-    document.body.innerHTML = ''; // limpa tudo (ou melhor, esconde os elementos existentes)
-    // Mas vamos criar a estrutura do chat
+    // Se for All Voices (tema vazio), ajusta o valor exibido e autoresList
+    if (tipo === 'tema' && valor === "") {
+        valor = "All Voices";
+        // Usa todos os autores disponíveis para exibição (opcional)
+        autoresList = window.AUTORES_DISPONIVEIS || [];
+    }
     criarInterfaceChat(tipo, valor, autoresList);
 }
 
@@ -37,9 +40,17 @@ function criarInterfaceChat(tipo, valor, autoresList) {
         border-bottom: 1px solid var(--mist, #c8bfae);
         flex-shrink: 0;
     `;
+    
+    let titulo = '';
+    if (tipo === 'tema') {
+        titulo = valor === "All Voices" ? "ALL VOICES" : `Theme: ${valor}`;
+    } else {
+        titulo = `Voice: ${valor}`;
+    }
+    
     header.innerHTML = `
         <button class="back-btn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; margin-right:12px; color:var(--sage, #6b7c5e);">←</button>
-        <div class="chat-title" style="font-size:1rem; font-weight:500;">${tipo === 'tema' ? 'Theme: ' + valor : 'Voice: ' + valor}</div>
+        <div class="chat-title" style="font-size:1rem; font-weight:500;">${titulo}</div>
     `;
     header.querySelector('.back-btn').onclick = () => voltarParaSelecao();
 
@@ -56,7 +67,7 @@ function criarInterfaceChat(tipo, valor, autoresList) {
         gap: 8px;
     `;
 
-    // Área de input (apenas input + botão)
+    // Área de input
     const inputArea = document.createElement('div');
     inputArea.className = 'chat-input-area';
     inputArea.style.cssText = `
@@ -97,16 +108,9 @@ function criarInterfaceChat(tipo, valor, autoresList) {
         cursor: pointer;
         flex-shrink: 0;
     `;
-    button.onclick = () => enviarPerguntaMobile(tipo, valor);
-
-    // Guarda informações extras (autor fixo, se for o caso)
-    if (tipo === 'autor') {
-        const hiddenAutor = document.createElement('input');
-        hiddenAutor.type = 'hidden';
-        hiddenAutor.id = 'autor-fixo';
-        hiddenAutor.value = valor;
-        inputArea.appendChild(hiddenAutor);
-    }
+    
+    // Guarda o tipo e valor para uso no envio
+    button.onclick = () => enviarPerguntaMobile(tipo, valor === "All Voices" ? "" : valor, autoresList);
 
     inputArea.appendChild(input);
     inputArea.appendChild(button);
@@ -117,13 +121,17 @@ function criarInterfaceChat(tipo, valor, autoresList) {
 
     // Evento Enter
     input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') enviarPerguntaMobile(tipo, valor);
+        if (e.key === 'Enter') enviarPerguntaMobile(tipo, valor === "All Voices" ? "" : valor, autoresList);
     });
 
     // Mensagem de boas-vindas
     let boasVindas = '';
     if (tipo === 'tema') {
-        boasVindas = `Ask anything about <em>${valor}</em>.`;
+        if (valor === "All Voices") {
+            boasVindas = `Ask anything to the full chorus of engaged Buddhism & simple economics.`;
+        } else {
+            boasVindas = `Ask anything about <em>${valor}</em>.`;
+        }
     } else {
         boasVindas = `Ask anything to <strong>${valor}</strong>.`;
     }
@@ -132,28 +140,29 @@ function criarInterfaceChat(tipo, valor, autoresList) {
     setTimeout(() => input.focus(), 200);
 }
 
-
-async function enviarPerguntaMobile(tipo, valor) {
+async function enviarPerguntaMobile(tipo, valor, autoresList = []) {
     const input = document.getElementById('pergunta-mobile');
     if (!input) return;
     const texto = input.value.trim();
     if (!texto) return;
 
-    let autorFiltro = '';
+    let autorFiltro = null;
+    let temaFiltro = null;
     if (tipo === 'autor') {
         autorFiltro = valor;
+    } else if (tipo === 'tema') {
+        // Se valor for string vazia (All Voices), envia tema = null
+        temaFiltro = (valor === "" || valor === "All Voices") ? null : valor;
     }
-    // Para tema, autorFiltro permanece vazio
 
     adicionarMensagemMobile('user', texto);
     input.value = '';
     input.disabled = true;
 
-    // Cria mensagem de espera com classe 'waiting'
+    // Mensagem de espera
     const waitingId = adicionarMensagemMobile('bot', '<em>Listening to the teachings...</em>', true);
     const waitingElem = document.getElementById(waitingId);
     
-    // Rotação de mensagens de espera (igual ao desktop)
     const _wmsgs = [...(window.WAITING_JS || ['Consulting the teachings...'])].sort(() => Math.random() - 0.5);
     let _idx = 0;
     const _rot = setInterval(() => {
@@ -170,8 +179,8 @@ async function enviarPerguntaMobile(tipo, valor) {
         const payload = {
             pergunta: texto,
             session_id: 'mobile-' + Date.now(),
-            tema: tipo === 'tema' ? valor : null,
-            autor: autorFiltro || null
+            tema: temaFiltro,
+            autor: autorFiltro
         };
         const response = await fetch('/ask', {
             method: 'POST',
@@ -208,31 +217,41 @@ function adicionarMensagemMobile(role, html, isWaiting = false) {
 }
 
 function voltarParaSelecao() {
-    // Recarrega a página original (versão mobile)
     window.location.reload();
 }
 
-
-// No DOMContentLoaded, em vez de apenas alert, chamamos iniciarChat com os dados
 document.addEventListener('DOMContentLoaded', () => {
     // Clique nos cards de tema
     document.querySelectorAll('.theme-card').forEach(card => {
         card.addEventListener('click', () => {
-            const tema = card.getAttribute('data-tema');
-            // Extrair lista de autores do atributo ou do texto
+            let tema = card.getAttribute('data-tema'); // pode ser "" para All Voices
+            // Se o card não tiver data-tema, tenta obter do texto (fallback)
+            if (tema === null) {
+                const themeNameElem = card.querySelector('.theme-name');
+                if (themeNameElem) tema = themeNameElem.innerText;
+                else tema = '';
+            }
+            // Extrair lista de autores se existir
             const autoresElem = card.querySelector('.theme-authors');
             let autoresList = [];
             if (autoresElem) {
                 autoresList = autoresElem.textContent.split(' · ');
             }
+            // Para All Voices, não precisamos de autoresList no início, mas podemos passar a lista completa
+            if (tema === "" || tema === "All Voices") {
+                autoresList = window.AUTORES_DISPONIVEIS || [];
+            }
             iniciarChat('tema', tema, autoresList);
         });
     });
+    
     // Clique nos cards de autor
     document.querySelectorAll('.author-card').forEach(card => {
         card.addEventListener('click', () => {
             const autor = card.getAttribute('data-autor');
-            iniciarChat('autor', autor, []);
+            if (autor) {
+                iniciarChat('autor', autor, []);
+            }
         });
     });
 });
