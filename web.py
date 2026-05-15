@@ -4,11 +4,13 @@ import random
 import json
 import re
 import time
+import psutil
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from collections import defaultdict
+from cachetools import TTLCache
 
 # Configurar o path ANTES de importar módulos locais
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,8 +30,7 @@ except ImportError as e:
     print(f"❌ Import error: {e}")
     sys.exit(1)
 
-# Agora TEMAS_DISPONIVEIS está garantido
-temas_json = json.dumps(TEMAS_DISPONIVEIS)  # converte para string JSON
+
 
 
 # ============================================
@@ -38,7 +39,7 @@ temas_json = json.dumps(TEMAS_DISPONIVEIS)  # converte para string JSON
 app = FastAPI()
 ai_provider         = FreeAIProvider()
 biblioteca_engaged  = carregar_biblioteca()
-conversation_memory = {}
+conversation_memory = TTLCache(maxsize=200, ttl=3600)
 
 MARCADORES_BLOQUEIO = ["BLOQUEADO", "EMPTY", "VAZIO"]
 
@@ -111,10 +112,20 @@ def limpar_resposta(texto: str) -> str:
     return texto.replace("(Silence)", "").replace("(pause)", "").lstrip("#").strip()
 
 
-def is_local(request: Request) -> bool:
-    host = request.headers.get("host", "")
-    return host.startswith("localhost") or host.startswith("127.0.0.1")
+# def is_local(request: Request) -> bool:
+#     host = request.headers.get("host", "")
+#     return host.startswith("localhost") or host.startswith("127.0.0.1") or host.startswith("192.168.") or host.startswith("177.104.74.30")
 
+def is_local(request: Request) -> bool:
+    # 1. Pega o IP real de quem está se conectando à API
+    client_ip = request.client.host
+
+    # 2. Verifica se o IP de origem é local ou o seu IP externo fixo
+    return (
+        client_ip in ("127.0.0.1", "::1") or 
+        client_ip.startswith("192.168.") or 
+        client_ip == "177.104.74.30"
+    )
 
 # ============================================
 # Arquivos Estáticos
@@ -134,28 +145,15 @@ if os.path.exists(os.path.join(BASE_DIR, "legal")):
 WAITING_JS = [
     "Listening to the teachings...",
     "Drawing from the sources...",
-    "The voices gather...",
-    "Bearing witness...",
-    "Consulting the acervo...",
     "The wisdom surfaces...",
-    "Weaving the threads...",
-    "The silence speaks...",
-    "The teachers respond...",
-    "The context unfolds...",
     "Breathing with the question...",
     "Turning the wheel of dharma...",
-    "The sangha remembers...",
     "Cultivating right intention...",
-    "The sutras open...",
     "Walking the path together...",
     "Mindfully attending...",
-    "The heart of understanding...",
     "Interbeing reveals...",
-    "The bell of mindfulness sounds...",
     "Transforming suffering...",
-    "The four immeasurables arise...",
     "Engaged practice awakens...",
-    "The acervo breathes...",
     "Right view emerges...",
 ]
 
@@ -177,7 +175,7 @@ HTML_PAGE = f"""<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chizu Engaged · Engaged Buddhism & Simple Economics</title>
+    <title>Chizu: Engaged · Engaged Buddhism & Simple Economics</title>
     <link rel="stylesheet" href="/static/style.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
@@ -191,7 +189,7 @@ HTML_PAGE = f"""<!DOCTYPE html>
     <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="sb-header">
-            <div class="sb-logo">CHIZU ENGAGED</div>
+            <div class="sb-logo">CHIZU: ENGAGED</div>
             <div class="sb-title">Conversations</div>
         </div>
         <button class="sb-new" onclick="novaConversa()">+ New conversation</button>
@@ -326,7 +324,7 @@ HTML_PAGE_MOBILE = f"""<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Chizu Engaged · Mobile</title>
+    <title>Chizu: Engaged · Mobile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/mobile.css?v=2">
@@ -431,12 +429,36 @@ async def ask(request: Request):
         resposta_raw, ia_nome = ai_provider.chat(prompt_completo, provider_nome=provider_nome)
         resposta_limpa        = limpar_resposta(resposta_raw)
 
+        # if DEBUG:
+        #     print("-" * 50)
+        #     print("      IA:", ia_nome)
+        #     print("   THEME:", perfil_nome)
+        #     print("QUESTION:", pergunta)
+        #     print(" CONTEXT:", contexto[:120])
+
+
         if DEBUG:
-            print("-" * 50)
-            print("      IA:", ia_nome)
-            print("   THEME:", perfil_nome)
-            print("QUESTION:", pergunta)
-            print(" CONTEXT:", contexto[:120])
+            process = psutil.Process(os.getpid())
+            
+            # Memória
+            mem_rss = process.memory_info().rss / 1024 / 1024
+            mem_percent = process.memory_percent()
+            
+            # CPU e Threads (interval=None não trava a requisição assíncrona)
+            cpu_percent = process.cpu_percent(interval=None) 
+            threads = process.num_threads()
+
+            print("\n" + "=" * 60)
+            print(f"IA / PERFIL     : {ia_nome} | Tema: {perfil_nome}")
+            print("-" * 60)
+            print(f"MEMÓRIA (RAM)   : {round(mem_rss, 2)} MB ({round(mem_percent, 2)}% do sistema)")
+            print(f"CPU / THREADS   : {cpu_percent}% de uso | {threads} threads ativas")
+            print(f"SESSÕES ATIVAS  : {len(conversation_memory)}")
+            print(f"IPS MONITORADOS : {len(_contadores)}")
+            print("-" * 60)
+            print(f"QUESTION        : {pergunta}")
+            print(f"CONTEXTO (120c) : {contexto[:120]}...")
+            print("=" * 60 + "\n")
 
         if is_bloqueado(resposta_limpa):
             return JSONResponse({"resposta": resposta_bloqueio()})
@@ -448,10 +470,6 @@ async def ask(request: Request):
             "pergunta": pergunta[:150],
             "resposta": resposta_limpa[:200]
         })
-        if len(conversation_memory[session_id]) > 10:
-            conversation_memory[session_id] = conversation_memory[session_id][-10:]
-        if len(conversation_memory) > 1000:
-            conversation_memory.clear()
 
         resposta_exibida = f"{resposta_limpa}\n\n— via {perfil_nome} · {ia_nome}"
         return JSONResponse({"resposta": resposta_exibida})

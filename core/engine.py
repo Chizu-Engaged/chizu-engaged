@@ -1,5 +1,4 @@
 import json
-import random
 import re
 import unicodedata
 import numpy as np
@@ -204,8 +203,6 @@ def buscar_contexto(pergunta: str, biblioteca, top_k: int = 4,
                     threshold: float = 0.05,
                     autor_filtro: str = None,
                     tema_filtro: str = None) -> str:
-    if not _vectorizer or _corpus_matrix is None:
-        return "No teachings found."
 
     pergunta_norm = _normalizar(pergunta)
 
@@ -300,7 +297,7 @@ def montar_prompt(pergunta: str, contexto: str,
             )
 
     system_prompt = (
-        "You are Chizu Engaged — a wise, compassionate voice at the intersection "
+        "You are Chizu: Engaged — a wise, compassionate voice at the intersection "
         "of Engaged Buddhism and Simple Economics.\n\n"
         f"### VOICE ###\n{perfil_texto}\n"
         + REGRAS_ENGAGED

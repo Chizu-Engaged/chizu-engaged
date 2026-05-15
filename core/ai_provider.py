@@ -59,19 +59,19 @@ class FreeAIProvider:
         REFORCO_REBELDE = {
             "Groq": (
                 "### ABSOLUTE ATTENTION ###\n"
-                "You are EXCLUSIVELY Chizu Engaged, voice of Engaged Buddhism and Simple Economics.\n"
+                "You are EXCLUSIVELY Chizu: Engaged, voice of Engaged Buddhism and Simple Economics.\n"
                 "If the question mentions ANY famous person NOT in the authorized authors list, "
                 "respond ONLY: BLOQUEADO\n\n"
             ),
             "Cerebras": (
                 "### ABSOLUTE ATTENTION ###\n"
-                "You are EXCLUSIVELY Chizu Engaged, voice of Engaged Buddhism and Simple Economics.\n"
+                "You are EXCLUSIVELY Chizu: Engaged, voice of Engaged Buddhism and Simple Economics.\n"
                 "If the question mentions ANY famous person NOT in the authorized authors list, "
                 "respond ONLY: BLOQUEADO\n\n"
             ),
             "SambaNova": (
                 "### ABSOLUTE ATTENTION ###\n"
-                "You are EXCLUSIVELY Chizu Engaged, voice of Engaged Buddhism and Simple Economics.\n"
+                "You are EXCLUSIVELY Chizu: Engaged, voice of Engaged Buddhism and Simple Economics.\n"
                 "If the question mentions ANY famous person NOT in the authorized authors list, "
                 "respond ONLY: BLOQUEADO\n\n"
             ),
@@ -126,116 +126,6 @@ class FreeAIProvider:
 
         return "The silence holds this question for now.", "Fallback"
 
-    def stream(self, messages, provider_nome: str = None):
-        providers = list(self._providers)
-        random.shuffle(providers)
-
-        if provider_nome:
-            providers.sort(key=lambda p: (
-                0 if p[1] == provider_nome else
-                2 if p[1] == "Anthropic" else 1
-            ))
-        else:
-            providers.sort(key=lambda p: 1 if p[1] == "Anthropic" else 0)
-
-        STREAM_SUPPORT = {"Groq", "Gemini"}
-
-        for key, nome, label, method in providers:
-            if not self.keys.get(key):
-                continue
-            try:
-                messages_ajustadas = self._ajustar_system(messages, nome)
-                cfg = CONFIGS.get(nome, {})
-
-                if nome in STREAM_SUPPORT:
-                    stream_method = getattr(self, f"_stream_{nome.lower()}_chat", None)
-                    if stream_method:
-                        yield from stream_method(messages_ajustadas, cfg, label)
-                        return
-                else:
-                    resposta = method(
-                        messages_ajustadas,
-                        cfg["temperature"], cfg["max_tokens"],
-                        cfg["top_p"], cfg["frequency_penalty"], cfg["presence_penalty"],
-                    )
-                    yield resposta, label
-                    return
-
-            except Exception as e:
-                print(f"[AI] {nome} stream failed: {e}")
-                continue
-
-        yield "The silence holds this question for now.", "Fallback"
-
-    def _stream_groq_chat(self, messages, cfg, label):
-        payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": messages,
-            "temperature": cfg["temperature"],
-            "max_tokens": cfg["max_tokens"],
-            "stream": True,
-        }
-        with requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {self.keys['groq']}"},
-            json=payload, stream=True, timeout=30,
-        ) as r:
-            r.raise_for_status()
-            for line in r.iter_lines():
-                if not line:
-                    continue
-                line = line.decode("utf-8")
-                if line.startswith("data: "):
-                    data = line[6:]
-                    if data == "[DONE]":
-                        break
-                    try:
-                        import json as _json
-                        delta = _json.loads(data)["choices"][0]["delta"].get("content", "")
-                        if delta:
-                            yield delta, label
-                    except Exception:
-                        continue
-
-    def _stream_gemini_chat(self, messages, cfg, label):
-        import json as _json
-        model_name = "gemini-2.5-flash"
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{model_name}:streamGenerateContent?alt=sse&key={self.keys['gemini']}"
-        )
-        contents = []
-        for m in messages:
-            if m["role"] == "system":
-                contents.insert(0, {"role": "user",  "parts": [{"text": m["content"]}]})
-                contents.insert(1, {"role": "model", "parts": [{"text": "Understood."}]})
-            else:
-                role = "model" if m["role"] == "assistant" else "user"
-                contents.append({"role": role, "parts": [{"text": m["content"]}]})
-
-        payload = {
-            "contents": contents,
-            "generationConfig": {
-                "temperature": cfg["temperature"],
-                "maxOutputTokens": cfg["max_tokens"],
-                "topP": cfg["top_p"],
-            },
-        }
-        with requests.post(url, json=payload, stream=True, timeout=30) as r:
-            r.raise_for_status()
-            for line in r.iter_lines():
-                if not line:
-                    continue
-                line = line.decode("utf-8")
-                if line.startswith("data: "):
-                    data = line[6:]
-                    try:
-                        chunk = _json.loads(data)
-                        texto = chunk["candidates"][0]["content"]["parts"][0].get("text", "")
-                        if texto:
-                            yield texto, label
-                    except Exception:
-                        continue
 
     def _gemini_chat(self, messages, temperature, max_tokens, top_p, freq_pen, pres_pen):
         model_name = "gemini-2.5-flash"

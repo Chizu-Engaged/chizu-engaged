@@ -1,5 +1,5 @@
 // ============================================
-// CHIZU ENGAGED — script.js
+// CHIZU: ENGAGED — script.js
 // ============================================
 
 const SESSION_ID = Math.random().toString(36).slice(2) + Date.now();
@@ -61,6 +61,8 @@ function novaConversa() {
 function adicionarHistorico(tema) {
     const ts = new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
     historico.unshift({ tema, ts, mensagens: [] });
+    // Limita o histórico para não crescer indefinidamente
+    if (historico.length > 10) historico.pop();
     idxAtivo = 0;
     renderHistorico();
 }
@@ -210,88 +212,6 @@ function adicionarMensagem(role, texto) {
     }
 }
 
-// ============================================
-// UTILITÁRIOS
-// ============================================
-function randomMsg(arr) {
-    if (!arr || arr.length === 0) return 'Consulting the teachings...';
-    return arr[Math.floor(Math.random() * arr.length)];
-}
-
-// ============================================
-// SÍNTESE DE VOZ (TTS)
-// ============================================
-let falando = false;
-
-function falar(texto) {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const fala  = new SpeechSynthesisUtterance(limparParaVoz(texto));
-    fala.lang   = 'en-US';
-    fala.rate   = 0.9;
-    fala.pitch  = 1.0;
-    fala.onstart = () => { falando = true; };
-    fala.onend   = () => { falando = false; };
-    window.speechSynthesis.speak(fala);
-}
-
-function limparParaVoz(texto) {
-    return texto
-        .replace(/— via .*$/gm, '')
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\*(.*?)\*/g, '$1')
-        .replace(/#{1,6}\s/g, '')
-        .replace(/<[^>]+>/g, '')
-        .trim();
-}
-
-// ============================================
-// MICROFONE
-// ============================================
-let reconhecendo = false;
-let recognition  = null;
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-function iniciarMicrofone() {
-    if (!SR || reconhecendo) return;
-    const btnMic = document.getElementById('btn-mic');
-
-    recognition = new SR();
-    recognition.lang            = 'en-US';
-    recognition.interimResults  = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => {
-        reconhecendo = true;
-        btnMic.classList.add('ouvindo');
-        btnMic.title = 'Release to send';
-        document.getElementById('pergunta').placeholder = 'Listening...';
-    };
-
-    recognition.onresult = (e) => {
-        document.getElementById('pergunta').value = e.results[0][0].transcript;
-    };
-
-    recognition.onerror = () => {
-        reconhecendo = false;
-        btnMic.classList.remove('ouvindo');
-        document.getElementById('pergunta').placeholder = 'Ask the teachings...';
-    };
-
-    recognition.onend = () => {
-        reconhecendo = false;
-        btnMic.classList.remove('ouvindo');
-        document.getElementById('pergunta').placeholder = 'Ask the teachings...';
-        if (document.getElementById('pergunta').value.trim()) fazerPergunta();
-    };
-
-    recognition.start();
-}
-
-function pararMicrofone(e) {
-    if (e) e.preventDefault();
-    if (recognition && reconhecendo) recognition.stop();
-}
 
 // ============================================
 // INICIALIZAÇÃO
