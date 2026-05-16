@@ -1,6 +1,6 @@
-#
-# web.py
-#
+#============================================
+# CHIZU: ENGAGED — web.py
+# ============================================
 import sys
 import os
 import random
@@ -181,9 +181,10 @@ HTML_PAGE = f"""<!DOCTYPE html>
     <title>Chizu: Engaged · Engaged Buddhism & Simple Economics</title>
     <link rel="stylesheet" href="/static/style.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
     <meta name="theme-color" content="#2c3a26">
 </head>
 <body>
@@ -390,6 +391,7 @@ async def head_index():
 
 @app.post("/ask")
 async def ask(request: Request):
+    start_time = time.time()
     DEBUG = is_local(request)
     ip    = request.client.host
 
@@ -446,6 +448,7 @@ async def ask(request: Request):
 
 
         if DEBUG:
+            elapsed_total = time.time() - start_time  
             process = psutil.Process(os.getpid())
             
             # Memória
@@ -478,15 +481,16 @@ async def ask(request: Request):
             print(f"IA              : {ia_nome}  ")    
             print(f"tipo_perfil     : {tipo_perfil}  ")
             print(f"perfil_nome     : {perfil_nome}{autor_info}")
-
+            print("-" * 60)
+            print(f"QUESTION        : {pergunta}")
+            print(f"CONTEXTO (120c) : {contexto[:120]}...")
             print("-" * 60)
             print(f"MEMÓRIA (RAM)   : {round(mem_rss, 2)} MB ({round(mem_percent, 2)}% do sistema)")
             print(f"CPU / THREADS   : {cpu_percent}% de uso | {threads} threads ativas")
             print(f"SESSÕES ATIVAS  : {len(conversation_memory)}")
             print(f"IPS MONITORADOS : {len(_contadores)}")
-            print("-" * 60)
-            print(f"QUESTION        : {pergunta}")
-            print(f"CONTEXTO (120c) : {contexto[:120]}...")
+            print(f"TEMPO TOTAL     : {elapsed_total:.2f} segundos")  
+
             print("=" * 60 + "\n")
 
         if is_bloqueado(resposta_limpa):

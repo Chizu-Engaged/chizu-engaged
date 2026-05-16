@@ -471,3 +471,10 @@ body {
     color: var(--ink);
 }
 
+.msg.bot .share-wpp-btn {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.msg.bot:hover .share-wpp-btn {
+    opacity: 1;
+}
