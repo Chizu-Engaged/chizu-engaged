@@ -14,6 +14,8 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from collections import defaultdict
 from cachetools import TTLCache
+from core.language import  detectar_idioma_texto
+from core.translator import traduzir
 
 # Configurar o path ANTES de importar módulos locais
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -373,20 +375,17 @@ HTML_PAGE_MOBILE = f"""<!DOCTYPE html>
 # ============================================
 # Rotas
 # ============================================
-#-------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 async def get_index(request: Request):
+    # Detecta e imprime o idioma no log (apenas para observação)
+    # idioma = obter_idioma_usuario(request)
+    # print(f"🌐 Idioma detectado: {idioma}")
+    
+    # Retorna o HTML original sem nenhuma modificação
     if is_mobile(request):
         return HTMLResponse(content=HTML_PAGE_MOBILE)
     else:
         return HTMLResponse(content=HTML_PAGE)
-#-------------------------------------------------------------------
-
-
-
-@app.head("/")
-async def head_index():
-    return Response(status_code=200)
 
 
 @app.post("/ask")
@@ -405,9 +404,14 @@ async def ask(request: Request):
         data         = await request.json()
         pergunta_raw = data.get("pergunta", "").strip()
         pergunta     = sanitizar_pergunta(pergunta_raw)
+        idioma_pergunta = detectar_idioma_texto(pergunta)
 
         if not pergunta:
             return JSONResponse({"resposta": resposta_bloqueio()})
+
+        pergunta_original = pergunta
+        if idioma_pergunta != "en":
+            pergunta = traduzir(pergunta, idioma_pergunta, "en" )
 
         autor_raw    = data.get("autor", None)
         autor_filtro = autor_raw if autor_raw in AUTORES_DISPONIVEIS else None
@@ -446,6 +450,13 @@ async def ask(request: Request):
         resposta_raw, ia_nome = ai_provider.chat(prompt_completo, provider_nome=provider_nome)
         resposta_limpa        = limpar_resposta(resposta_raw)
 
+        if is_bloqueado(resposta_limpa):
+            return JSONResponse({"resposta": resposta_bloqueio()})
+
+
+        # Traduzir resposta de volta para o idioma do usuário (se não for inglês)
+        if idioma_pergunta != "en":
+            resposta_limpa = traduzir(resposta_limpa, de="en", para=idioma_pergunta)
 
         if DEBUG:
             elapsed_total = time.time() - start_time  
@@ -477,7 +488,7 @@ async def ask(request: Request):
                 perfil_nome_exibicao = perfil_nome
 
             print("\n" + "=" * 60)
-
+            print(f"Idioma          : {idioma_pergunta} - Texto: {pergunta_original[:80]}")
             print(f"IA              : {ia_nome}  ")    
             print(f"tipo_perfil     : {tipo_perfil}  ")
             print(f"perfil_nome     : {perfil_nome}{autor_info}")
@@ -493,8 +504,6 @@ async def ask(request: Request):
 
             print("=" * 60 + "\n")
 
-        if is_bloqueado(resposta_limpa):
-            return JSONResponse({"resposta": resposta_bloqueio()})
 
         # Memória de sessão
         if session_id not in conversation_memory:
