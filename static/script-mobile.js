@@ -31,10 +31,19 @@ function criarInterfaceChat(tipo, valor, autoresList) {
 
     let titulo = '';
     if (tipo === 'tema') {
-        titulo = valor === "All Voices" ? allVoicesLabel.toUpperCase() : `Theme: ${valor}`;
+        if (valor === "All Voices") {
+            titulo = allVoicesLabel.toUpperCase();
+        } else {
+            let temaTraduzido = valor;
+            if (window.TEMAS_TRADUZIDOS && window.TEMAS_TRADUZIDOS[valor]) {
+                temaTraduzido = window.TEMAS_TRADUZIDOS[valor];
+            }
+            titulo = `Theme: ${temaTraduzido}`;
+        }
     } else {
         titulo = `${voicePrefix}${valor}`;
     }
+
     header.innerHTML = `
         <button class="back-btn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; margin-right:12px; color:var(--sage, #6b7c5e);">←</button>
         <div class="chat-title" style="font-size:1rem; font-weight:500;">${titulo}</div>
@@ -82,7 +91,11 @@ function criarInterfaceChat(tipo, valor, autoresList) {
         if (valor === "All Voices") {
             boasVindas = welcomeAll;
         } else {
-            boasVindas = welcomeTheme.replace("{theme}", valor);
+            let temaTraduzido = valor;
+            if (window.TEMAS_TRADUZIDOS && window.TEMAS_TRADUZIDOS[valor]) {
+                temaTraduzido = window.TEMAS_TRADUZIDOS[valor];
+            }
+            boasVindas = welcomeTheme.replace("{theme}", temaTraduzido);
         }
     } else {
         boasVindas = `${welcomeAuthor} (${valor})`;
@@ -153,17 +166,70 @@ async function enviarPerguntaMobile(tipo, valor, autoresList = []) {
 function adicionarMensagemMobile(role, html, isWaiting = false) {
     const messagesDiv = document.getElementById('chat-messages-mobile');
     if (!messagesDiv) return null;
+    
     const msgDiv = document.createElement('div');
     msgDiv.className = `msg ${role}`;
     if (isWaiting) msgDiv.id = 'waiting-msg-' + Date.now();
-    msgDiv.innerHTML = `<div class="msg-bubble"><p>${html}</p></div>`;
+    
+    let bubbleContent = `<div class="msg-bubble"><p>${html}</p></div>`;
+    
+    if (role === 'bot' && !isWaiting) {
+        const msgId = 'msg-mobile-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+        msgDiv.id = msgId;
+        // Botão com estilo inline garantido e ícone
+        bubbleContent = `
+            <div style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; margin: 4px 0;">
+                <div class="msg-bubble" style="flex: 1; margin: 0;">${html}</div>
+                <button class="share-wpp-btn" data-msg-id="${msgId}" 
+                    style="background: #e8e0d5; border: none; cursor: pointer; color: #2c3a26; font-size: 1.4rem; 
+                           width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+                           transition: background 0.2s;"
+                    onmouseover="this.style.backgroundColor='#d4cbbc'" onmouseout="this.style.backgroundColor='#e8e0d5'"
+                    aria-label="Share on WhatsApp">
+                    <i class="fab fa-whatsapp" style="font-size: 1.4rem;"></i>
+                </button>
+            </div>
+        `;
+    }
+    
+    msgDiv.innerHTML = bubbleContent;
     messagesDiv.appendChild(msgDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    
+    if (role === 'bot' && !isWaiting) {
+        const shareBtn = msgDiv.querySelector('.share-wpp-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const bubbleTextElem = msgDiv.querySelector('.msg-bubble p') || msgDiv.querySelector('.msg-bubble');
+                let resposta = bubbleTextElem ? bubbleTextElem.innerText || bubbleTextElem.textContent : '';
+                const viaIndex = resposta.indexOf('— via');
+                if (viaIndex !== -1) resposta = resposta.substring(0, viaIndex).trim();
+                const intro = "地図 A wisdom from Chizu: Engaged —\n\n";
+                const footer = "\n\n— Shared from https://engaged.chizu.ia.br/";
+                const mensagemWhatsApp = intro + resposta + footer;
+                console.log("Compartilhando:", mensagemWhatsApp); // para depuração
+                compartilharWhatsApp(mensagemWhatsApp);
+            });
+        } else {
+            console.warn("Botão não encontrado para a mensagem", msgDiv.id);
+        }
+    }
+    
     return msgDiv.id;
 }
 
 function voltarParaSelecao() {
     window.location.reload();
+}
+
+function compartilharWhatsApp(texto) {
+    if (!texto) return;
+    const mensagem = encodeURIComponent(texto);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const urlWhatsApp = isMobile ? `whatsapp://send?text=${mensagem}` : `https://web.whatsapp.com/send?text=${mensagem}`;
+    window.open(urlWhatsApp, '_blank');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

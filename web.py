@@ -1,4 +1,4 @@
-# ============================================
+ # ============================================
 # CHIZU: ENGAGED — web.py
 # ============================================
 import sys
@@ -41,7 +41,7 @@ TRANSLATIONS_FILE = os.path.join(BASE_DIR, "data", "ui_translations.json")
 try:
     with open(TRANSLATIONS_FILE, "r", encoding="utf-8") as f:
         UI_TRANSLATIONS = json.load(f)
-    #print(f"✅ Traduções carregadas: {list(UI_TRANSLATIONS.keys())}")
+    print(f"✅ Traduções carregadas: {list(UI_TRANSLATIONS.keys())}")
 except FileNotFoundError:
     print(f"⚠️ Arquivo de traduções não encontrado. Usando apenas inglês.")
     UI_TRANSLATIONS = {"en": {}}
@@ -110,7 +110,6 @@ def sanitizar_pergunta(texto: str) -> str | None:
     return texto
 
 def resposta_bloqueio(idioma: str = "en") -> str:
-    """Retorna uma frase de bloqueio no idioma solicitado (fallback inglês)."""
     trad = UI_TRANSLATIONS.get(idioma, UI_TRANSLATIONS.get("en", {}))
     frases = trad.get("blocked_phrases", [
         "This question rests in silence.",
@@ -154,7 +153,7 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chizu: Engaged · Engaged Buddhism & Simple Economics</title>
-    <link rel="stylesheet" href="/static/style.css?v=2">
+    <link rel="stylesheet" href="/static/style.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">
@@ -163,6 +162,13 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
     <meta name="theme-color" content="#2c3a26">
 </head>
 <body>
+<script>
+    window.WAITING_JS = {waiting_js_json};
+    window.TEMAS_DISPONIVEIS = {temas_json};
+    window.AUTORES_DISPONIVEIS = {autores_json};
+    window.UI_STRINGS = {ui_strings_json};
+    window.TEMAS_TRADUZIDOS = {temas_traduzidos_json};
+</script>
 <div class="layout">
     <aside class="sidebar">
         <div class="sb-header">
@@ -252,13 +258,7 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
         </div>
     </main>
 </div>
-<script>
-    window.WAITING_JS = {waiting_js_json};
-    window.TEMAS_DISPONIVEIS = {temas_json};
-    window.AUTORES_DISPONIVEIS = {autores_json};
-    window.UI_STRINGS = {ui_strings_json};
-</script>
-<script src="/static/script.js?v=2"></script>
+<script src="/static/script.js?v=1"></script>
 </body>
 </html>"""
 
@@ -270,7 +270,8 @@ HTML_PAGE_MOBILE_TEMPLATE = """<!DOCTYPE html>
     <title>Chizu: Engaged · Mobile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/mobile.css?v=2">
+    <link rel="stylesheet" href="/static/mobile.css?v=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">
 </head>
@@ -281,7 +282,7 @@ HTML_PAGE_MOBILE_TEMPLATE = """<!DOCTYPE html>
     </div>
     <div class="section-title">{{MOBILE_THEMES_TITLE}}</div>
     <div id="theme-list" class="theme-list">
-        <div class="theme-card" data-tema="" onclick="selecionarTemaMobile(this)">
+        <div class="theme-card" data-tema="">
             <div class="theme-name">{{ALL_VOICES_TITLE}}</div>
             <div class="theme-desc">{{MOBILE_ALL_VOICES_DESC}}</div>
         </div>
@@ -292,7 +293,14 @@ HTML_PAGE_MOBILE_TEMPLATE = """<!DOCTYPE html>
         {autores_html}
     </div>
     <div class="mobile-footer">{{MOBILE_FOOTER}}</div>
-    <script src="/static/script-mobile.js?v=2"></script>
+    <script>
+        window.WAITING_JS = {waiting_js_json};
+        window.TEMAS_DISPONIVEIS = {temas_json};
+        window.AUTORES_DISPONIVEIS = {autores_json};
+        window.UI_STRINGS = {ui_strings_json};
+        window.TEMAS_TRADUZIDOS = {temas_traduzidos_json};
+    </script>
+    <script src="/static/script-mobile.js?v=1"></script>
 </body>
 </html>"""
 
@@ -301,9 +309,14 @@ HTML_PAGE_MOBILE_TEMPLATE = """<!DOCTYPE html>
 # ============================================
 @app.get("/", response_class=HTMLResponse)
 async def get_index(request: Request):
+    # Força espanhol para teste; troque por obter_idioma_usuario(request) depois
+    # idioma = "fr" # ['en', 'pt', 'es', 'fr', 'de']
     idioma = obter_idioma_usuario(request)
-    # print(f"🌐 Idioma detectado: {idioma}")
+    #print(f"🌐 Idioma detectado: {idioma}")
     trad = UI_TRANSLATIONS.get(idioma, UI_TRANSLATIONS.get("en", {}))
+
+    temas_traduzidos = trad.get("themes", {})
+    temas_traduzidos_json = json.dumps(temas_traduzidos, ensure_ascii=False)
 
     def aplicar_traducoes(template: str, t: dict) -> str:
         subs = {
@@ -382,10 +395,16 @@ async def get_index(request: Request):
     html_desktop = html_desktop.replace("{temas_json}", temas_json)
     html_desktop = html_desktop.replace("{autores_json}", autores_json)
     html_desktop = html_desktop.replace("{ui_strings_json}", ui_strings_json)
+    html_desktop = html_desktop.replace("{temas_traduzidos_json}", temas_traduzidos_json)
 
     html_mobile = aplicar_traducoes(HTML_PAGE_MOBILE_TEMPLATE, trad)
     html_mobile = html_mobile.replace("{temas_html}", temas_html)
     html_mobile = html_mobile.replace("{autores_html}", autores_html)
+    html_mobile = html_mobile.replace("{waiting_js_json}", waiting_json)
+    html_mobile = html_mobile.replace("{temas_json}", temas_json)
+    html_mobile = html_mobile.replace("{autores_json}", autores_json)
+    html_mobile = html_mobile.replace("{ui_strings_json}", ui_strings_json)
+    html_mobile = html_mobile.replace("{temas_traduzidos_json}", temas_traduzidos_json)
 
     if is_mobile(request):
         return HTMLResponse(content=html_mobile)

@@ -7,7 +7,6 @@ const SESSION_ID = Math.random().toString(36).slice(2) + Date.now();
 let temaAtivo  = "Gift Economy";
 let historico  = [];
 let idxAtivo   = 0;
-const TEMAS    = window.TEMAS_DISPONIVEIS || {};
 
 function atualizarSelectAutores(tema) {
     const select = document.getElementById('autor-select');
@@ -44,7 +43,11 @@ function iniciarConversa() {
         const todosAutores = window.AUTORES_DISPONIVEIS || [];
         document.getElementById('chat-vozes-label').textContent = todosAutores.join(' · ');
     } else {
-        document.getElementById('chat-tema-label').textContent = temaAtivo.toUpperCase();
+        let temaExibido = temaAtivo;
+        if (window.TEMAS_TRADUZIDOS && window.TEMAS_TRADUZIDOS[temaAtivo]) {
+            temaExibido = window.TEMAS_TRADUZIDOS[temaAtivo];
+        }
+        document.getElementById('chat-tema-label').textContent = temaExibido.toUpperCase();
         document.getElementById('chat-vozes-label').textContent = (window.TEMAS_DISPONIVEIS[temaAtivo] || []).join(' · ');
     }
 
@@ -83,22 +86,29 @@ function salvarMensagemHistorico(role, html) {
 
 function renderHistorico() {
     const lista = document.getElementById('historico-lista');
-    lista.innerHTML = historico.slice(0, 10).map((h, i) => `
+    lista.innerHTML = historico.slice(0, 10).map((h, i) => {
+        let titulo = h.tema;
+        if (window.TEMAS_TRADUZIDOS && window.TEMAS_TRADUZIDOS[titulo]) {
+            titulo = window.TEMAS_TRADUZIDOS[titulo];
+        }
+        return `
         <div class="sb-item ${i === idxAtivo ? 'active' : ''}" onclick="abrirHistorico(${i})">
-            <div class="sb-item-theme">${h.tema.toUpperCase()}</div>
+            <div class="sb-item-theme">${titulo.toUpperCase()}</div>
             <div class="sb-item-date">${h.ts}</div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 function abrirHistorico(idx) {
     const h = historico[idx];
     if (!h) return;
+
     idxAtivo = idx;
     document.querySelectorAll('.sb-item').forEach((el, i) => {
         el.classList.toggle('active', i === idx);
     });
 
+    // Restaura o temaAtivo
     if (h.temaOriginal !== undefined && h.temaOriginal === "") {
         temaAtivo = "";
     } else {
@@ -112,15 +122,21 @@ function abrirHistorico(idx) {
     const allVoicesLabel = ui.all_voices_label || "All Voices";
     const welcomeAll = ui.welcome_prompt_all_voices || "Ask anything to the full chorus of engaged Buddhism & simple economics.";
 
+    // Cabeçalho traduzido
     if (temaAtivo === "") {
         document.getElementById('chat-tema-label').textContent = allVoicesLabel.toUpperCase();
         const todosAutores = window.AUTORES_DISPONIVEIS || [];
         document.getElementById('chat-vozes-label').textContent = todosAutores.join(' · ');
     } else {
-        document.getElementById('chat-tema-label').textContent = h.tema.toUpperCase();
-        document.getElementById('chat-vozes-label').textContent = (window.TEMAS_DISPONIVEIS[h.tema] || []).join(' · ');
+        let temaExibido = temaAtivo;
+        if (window.TEMAS_TRADUZIDOS && window.TEMAS_TRADUZIDOS[temaAtivo]) {
+            temaExibido = window.TEMAS_TRADUZIDOS[temaAtivo];
+        }
+        document.getElementById('chat-tema-label').textContent = temaExibido.toUpperCase();
+        document.getElementById('chat-vozes-label').textContent = (window.TEMAS_DISPONIVEIS[temaAtivo] || []).join(' · ');
     }
 
+    // Restaura mensagens
     const msgs = document.getElementById('chat-messages');
     if (h.mensagens && h.mensagens.length > 0) {
         msgs.innerHTML = h.mensagens.map(m => `<div class="msg ${m.role}"><div class="msg-bubble"><p>${m.html}</p></div></div>`).join('');
@@ -128,7 +144,7 @@ function abrirHistorico(idx) {
         if (temaAtivo === "") {
             msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>${welcomeAll}</p></div></div>`;
         } else {
-            const themeWelcome = (ui.welcome_prompt_theme || "Ask anything about {theme}").replace("{theme}", h.tema);
+            const themeWelcome = (ui.welcome_prompt_theme || "Ask anything about {theme}").replace("{theme}", temaAtivo);
             msgs.innerHTML = `<div class="msg bot"><div class="msg-bubble"><p>${themeWelcome}</p></div></div>`;
         }
     }
