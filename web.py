@@ -431,8 +431,9 @@ async def ask(request: Request):
             return JSONResponse({"resposta": resposta_bloqueio(idioma_pergunta)})
 
         pergunta_original = pergunta
+        fonte_traducao = None
         if idioma_pergunta != "en":
-            pergunta = traduzir(pergunta, idioma_pergunta, "en")
+            pergunta, _ = traduzir(pergunta, idioma_pergunta, "en")
 
         autor_raw = data.get("autor", None)
         autor_filtro = autor_raw if autor_raw in AUTORES_DISPONIVEIS else None
@@ -468,7 +469,7 @@ async def ask(request: Request):
             return JSONResponse({"resposta": resposta_bloqueio(idioma_pergunta)})
 
         if idioma_pergunta != "en":
-            resposta_limpa = traduzir(resposta_limpa, de="en", para=idioma_pergunta)
+            resposta_limpa, fonte_traducao = traduzir(resposta_limpa, de="en", para=idioma_pergunta)
 
         if DEBUG:
             elapsed_total = time.time() - start_time
@@ -514,7 +515,8 @@ async def ask(request: Request):
             "resposta": resposta_limpa[:200]
         })
 
-        resposta_exibida = f"{resposta_limpa}\n\n— via {perfil_nome} · {ia_nome}"
+        traducao_info = f" · {fonte_traducao}" if fonte_traducao else ""
+        resposta_exibida = f"{resposta_limpa}\n\n— via {perfil_nome} · {ia_nome}{traducao_info}"
         return JSONResponse({"resposta": resposta_exibida})
 
     except Exception as e:
