@@ -307,6 +307,12 @@ HTML_PAGE_MOBILE_TEMPLATE = """<!DOCTYPE html>
 # ============================================
 # Rotas
 # ============================================
+@app.head("/")
+async def head_root():
+    """Health check para UptimeRobot e monitores legítimos."""
+    return Response(status_code=200)
+
+    
 @app.get("/", response_class=HTMLResponse)
 async def get_index(request: Request):
     # Força espanhol para teste; troque por obter_idioma_usuario(request) depois
