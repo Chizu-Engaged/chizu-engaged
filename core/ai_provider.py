@@ -31,7 +31,7 @@ class FreeAIProvider:
             ("gemini",    "Gemini",    "Gemini 2.5 Flash · Google", self._gemini_chat),
             ("groq",      "Groq",      "Llama 3.3 70B · Groq",      self._groq_chat),
             ("cerebras",  "Cerebras",  "gpt-oss-120b · Cerebras",   self._cerebras_chat),
-            ("sambanova", "SambaNova", "Llama 3.1 8B · SambaNova",  self._sambanova_chat),
+            ("sambanova", "SambaNova", "Llama-3.3-70B · SambaNova",  self._sambanova_chat),
             ("anthropic", "Anthropic", "Claude Haiku · Anthropic",  self._anthropic_chat),
         ]
 
@@ -171,7 +171,7 @@ class FreeAIProvider:
 
     def _cerebras_chat(self, messages, temperature, max_tokens, top_p, freq_pen, pres_pen):
         payload = {
-            "model": "llama3.1-8b",
+            "model": "gpt-oss-120b",
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
