@@ -179,6 +179,7 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
         <div class="sb-section">{{HISTORY_LABEL}}</div>
         <div id="historico-lista"></div>
         <div class="sb-footer">
+            <a href="/static/takuhatsu.html" class="sb-link">Takuhatsu (托鉢)</a>             
             <a href="/static/legal/how-it-works.html" class="sb-link">{{HOW_IT_WORKS}}</a>
             <a href="/static/legal/legal-notice.html" class="sb-link">{{LEGAL_NOTICE}}</a>
             <a href="/static/legal/copyright.html" class="sb-link">{{COPYRIGHT}}</a>
